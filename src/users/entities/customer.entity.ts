@@ -1,9 +1,4 @@
-import {
-  Entity,
-  Column,
-  OneToMany,
-  ChildEntity,
-} from 'typeorm';
+import { Entity, Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('customers')
@@ -12,17 +7,17 @@ export class Customer extends User {
   @Column({ nullable: true })
   phone?: string;
 
-  @Column({ 
+  @Column({
     name: 'preferred_language',
     default: 'ar',
     enum: ['ar', 'en'],
   })
   preferredLanguage: 'ar' | 'en';
 
-  @Column({ 
-    name: 'date_of_birth', 
+  @Column({
+    name: 'date_of_birth',
     type: 'date',
-    nullable: true 
+    nullable: true,
   })
   dateOfBirth?: Date;
 

@@ -1,8 +1,4 @@
-import {
-  Entity,
-  Column,
-  ChildEntity,
-} from 'typeorm';
+import { Entity, Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('factories')
