@@ -70,14 +70,14 @@
   - [x] 3.11 Write unit tests for custom decorators
 
 - [ ] 4.0 Build User Registration and Profile Management
-  - [ ] 4.1 Generate users controller: `nest g controller users`
-  - [ ] 4.2 Generate users service: `nest g service users`
-  - [ ] 4.3 Create DTOs for customer registration (CreateCustomerDto)
-  - [ ] 4.4 Create DTOs for creator registration (CreateCreatorDto)
-  - [ ] 4.5 Create DTOs for profile updates (UpdateCustomerProfileDto, UpdateCreatorProfileDto)
-  - [ ] 4.6 Create response DTOs for user data (UserResponseDto, CustomerResponseDto, CreatorResponseDto)
-  - [ ] 4.7 Implement registration endpoints: `POST /auth/register/customer` and `POST /auth/register/creator`
-  - [ ] 4.8 Implement profile management endpoints: `GET /users/profile` and `PUT /users/profile`
+  - [x] 4.1 Generate users controller: `nest g controller users`
+  - [x] 4.2 Generate users service: `nest g service users`
+  - [x] 4.3 Create DTOs for customer registration (CreateCustomerDto)
+  - [x] 4.4 Create DTOs for creator registration (CreateCreatorDto)
+  - [x] 4.5 Create DTOs for profile updates (UpdateCustomerProfileDto, UpdateCreatorProfileDto)
+  - [x] 4.6 Create response DTOs for user data (UserResponseDto, CustomerResponseDto, CreatorResponseDto)
+  - [x] 4.7 Implement registration endpoints: `POST /auth/register/customer` and `POST /auth/register/creator`
+  - [x] 4.8 Implement profile management endpoints: `GET /users/profile` and `PUT /users/profile`
   - [ ] 4.9 Add validation logic for role-specific profile fields
   - [ ] 4.10 Implement profile completion percentage calculation
   - [ ] 4.11 Generate uploads module for profile pictures: `nest g module uploads`

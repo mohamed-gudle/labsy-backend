@@ -10,11 +10,21 @@ import { VerifyTokenDto, AuthResponseDto } from './dto';
 import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
+import {
+  CreateCustomerDto,
+  CreateCreatorDto,
+  CustomerResponseDto,
+  CreatorResponseDto,
+} from '../users/dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('verify')
   @ApiOperation({
@@ -83,5 +93,63 @@ export class AuthController {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  @Post('register/customer')
+  @ApiOperation({
+    summary: 'Register a new customer',
+    description:
+      'Registers a new customer account using Firebase authentication',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Customer registered successfully',
+    type: CustomerResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data or email mismatch',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired Firebase token',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'User already registered',
+  })
+  async registerCustomer(
+    @Body() createCustomerDto: CreateCustomerDto,
+  ): Promise<CustomerResponseDto> {
+    return this.usersService.registerCustomer(createCustomerDto);
+  }
+
+  @Post('register/creator')
+  @ApiOperation({
+    summary: 'Register a new creator',
+    description:
+      'Registers a new creator account using Firebase authentication',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Creator registered successfully',
+    type: CreatorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data or email mismatch',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired Firebase token',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'User already registered',
+  })
+  async registerCreator(
+    @Body() createCreatorDto: CreateCreatorDto,
+  ): Promise<CreatorResponseDto> {
+    return this.usersService.registerCreator(createCreatorDto);
   }
 }
