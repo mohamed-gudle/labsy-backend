@@ -1,7 +1,6 @@
-import { Entity, Column, ChildEntity } from 'typeorm';
+import { Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('factories')
 @ChildEntity()
 export class Factory extends User {
   @Column({ name: 'company_name' })

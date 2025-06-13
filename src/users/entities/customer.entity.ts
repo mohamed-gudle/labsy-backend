@@ -1,7 +1,6 @@
-import { Entity, Column, ChildEntity } from 'typeorm';
+import { Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('customers')
 @ChildEntity()
 export class Customer extends User {
   @Column({ nullable: true })

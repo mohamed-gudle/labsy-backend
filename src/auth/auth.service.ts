@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import {
   Injectable,
-  OnModuleInit,
   Logger,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as admin from 'firebase-admin';
-import { User } from '../users/entities';
+import { Repository } from 'typeorm';
+import { Admin, Creator, Customer, Factory, User } from '../users/entities';
 import { UserRole, UserStatus } from '../users/enums';
 
 export interface FirebaseUser {
@@ -95,7 +96,7 @@ export class AuthService implements OnModuleInit {
 
   async findOrCreateUser(
     firebaseUser: FirebaseUser,
-    role?: UserRole,
+    role: UserRole = UserRole.CUSTOMER,
   ): Promise<User> {
     try {
       // Try to find existing user by Firebase UID
@@ -113,21 +114,43 @@ export class AuthService implements OnModuleInit {
 
         return await this.userRepository.save(user);
       }
+      const actualRole = role;
+      this.logger.log(`Creating new user with role: ${actualRole}`);
 
-      // Create new user if not found
-      const newUser = this.userRepository.create({
-        firebaseUid: firebaseUser.uid,
-        email: firebaseUser.email,
-        name: firebaseUser.name,
-        role: role || UserRole.CUSTOMER,
-        status: UserStatus.ACTIVE,
-        emailVerified: firebaseUser.emailVerified,
-        profilePictureUrl: firebaseUser.picture,
-        lastLoginAt: new Date(),
-      });
+      let newUser: User;
+
+      switch (actualRole) {
+        case UserRole.CUSTOMER:
+          newUser = new Customer();
+          break;
+        case UserRole.CREATOR:
+          newUser = new Creator();
+          break;
+        case UserRole.FACTORY:
+          newUser = new Factory();
+          break;
+        case UserRole.ADMIN:
+          newUser = new Admin();
+          break;
+        default:
+          throw new UnauthorizedException(`Invalid user role: ${actualRole}`);
+      }
+
+      // Set common properties for all user types
+      newUser.firebaseUid = firebaseUser.uid;
+      newUser.email = firebaseUser.email;
+      newUser.name = firebaseUser.name;
+      newUser.status = UserStatus.ACTIVE;
+      newUser.emailVerified = firebaseUser.emailVerified;
+      newUser.profilePictureUrl = firebaseUser.picture;
+      newUser.lastLoginAt = new Date();
+
+      this.logger.log(`New ${actualRole} user: ${JSON.stringify(newUser)}`);
 
       user = await this.userRepository.save(newUser);
-      this.logger.log(`Created new user: ${user.id} (${user.email})`);
+      this.logger.log(
+        `Created new user: ${user.id} (${user.email}), role: ${user.role}`,
+      );
 
       return user;
     } catch (error) {
