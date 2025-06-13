@@ -5,12 +5,13 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { VerifyTokenDto } from './dto';
 import { UserRole, UserStatus } from '../users/enums';
+import { User } from '../users/entities/user.entity';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
 
-  const mockUser = {
+  const mockUser: User = {
     id: '550e8400-e29b-41d4-a716-446655440000',
     firebaseUid: 'firebase-uid-123',
     email: 'test@example.com',
@@ -23,6 +24,20 @@ describe('AuthController', () => {
     createdAt: new Date('2025-06-01T10:30:00Z'),
     updatedAt: new Date('2025-06-12T10:30:00Z'),
     deletedAt: undefined,
+  } as User;
+
+  const expectedAuthResponse = {
+    id: mockUser.id,
+    firebaseUid: mockUser.firebaseUid,
+    email: mockUser.email,
+    name: mockUser.name,
+    role: mockUser.role,
+    status: mockUser.status,
+    profilePictureUrl: mockUser.profilePictureUrl,
+    emailVerified: mockUser.emailVerified,
+    lastLoginAt: mockUser.lastLoginAt,
+    createdAt: mockUser.createdAt,
+    updatedAt: mockUser.updatedAt,
   };
 
   const mockAuthService = {
@@ -65,19 +80,7 @@ describe('AuthController', () => {
       expect(authService.verifyTokenAndSyncUser).toHaveBeenCalledWith(
         'valid-firebase-token',
       );
-      expect(result).toEqual({
-        id: mockUser.id,
-        firebaseUid: mockUser.firebaseUid,
-        email: mockUser.email,
-        name: mockUser.name,
-        role: mockUser.role,
-        status: mockUser.status,
-        profilePictureUrl: mockUser.profilePictureUrl,
-        emailVerified: mockUser.emailVerified,
-        lastLoginAt: mockUser.lastLoginAt,
-        createdAt: mockUser.createdAt,
-        updatedAt: mockUser.updatedAt,
-      });
+      expect(result).toEqual(expectedAuthResponse);
     });
 
     it('should throw UnauthorizedException for invalid token', async () => {
@@ -97,116 +100,139 @@ describe('AuthController', () => {
         'invalid-token',
       );
     });
-  });
 
-  describe('getCurrentUser', () => {
-    it('should return current user when valid authorization header provided', async () => {
-      const authorization = 'Bearer valid-firebase-token';
-
-      mockAuthService.verifyTokenAndSyncUser.mockResolvedValue(mockUser);
-
-      const result = await controller.getCurrentUser(authorization);
-
-      expect(authService.verifyTokenAndSyncUser).toHaveBeenCalledWith(
-        'valid-firebase-token',
-      );
-      expect(result).toEqual({
-        id: mockUser.id,
-        firebaseUid: mockUser.firebaseUid,
-        email: mockUser.email,
-        name: mockUser.name,
-        role: mockUser.role,
-        status: mockUser.status,
-        profilePictureUrl: mockUser.profilePictureUrl,
-        emailVerified: mockUser.emailVerified,
-        lastLoginAt: mockUser.lastLoginAt,
-        createdAt: mockUser.createdAt,
-        updatedAt: mockUser.updatedAt,
-      });
-    });
-
-    it('should throw UnauthorizedException when authorization header is missing', async () => {
-      await expect(controller.getCurrentUser()).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(controller.getCurrentUser()).rejects.toThrow(
-        'Authorization header is required',
-      );
-
-      expect(authService.verifyTokenAndSyncUser).not.toHaveBeenCalled();
-    });
-
-    it('should throw UnauthorizedException when authorization header is empty', async () => {
-      await expect(controller.getCurrentUser('')).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(controller.getCurrentUser('')).rejects.toThrow(
-        'Authorization header is required',
-      );
-
-      expect(authService.verifyTokenAndSyncUser).not.toHaveBeenCalled();
-    });
-
-    it('should throw UnauthorizedException when authorization header format is invalid', async () => {
-      const invalidHeaders = [
-        'invalid-format',
-        'Bearer',
-        'Bearer ',
-        'Basic valid-token',
-      ];
-
-      for (const header of invalidHeaders) {
-        await expect(controller.getCurrentUser(header)).rejects.toThrow(
-          UnauthorizedException,
-        );
-        await expect(controller.getCurrentUser(header)).rejects.toThrow(
-          'Invalid authorization header format',
-        );
-      }
-
-      expect(authService.verifyTokenAndSyncUser).not.toHaveBeenCalled();
-    });
-
-    it('should throw UnauthorizedException when token verification fails', async () => {
-      const authorization = 'Bearer invalid-token';
+    it('should handle missing token in request body', async () => {
+      const verifyTokenDto: VerifyTokenDto = {
+        token: '',
+      };
 
       mockAuthService.verifyTokenAndSyncUser.mockRejectedValue(
         new UnauthorizedException('Invalid or expired token'),
       );
 
-      await expect(controller.getCurrentUser(authorization)).rejects.toThrow(
+      await expect(controller.verifyToken(verifyTokenDto)).rejects.toThrow(
         UnauthorizedException,
       );
 
+      expect(authService.verifyTokenAndSyncUser).toHaveBeenCalledWith('');
+    });
+
+    it('should handle service errors gracefully', async () => {
+      const verifyTokenDto: VerifyTokenDto = {
+        token: 'valid-token',
+      };
+
+      mockAuthService.verifyTokenAndSyncUser.mockRejectedValue(
+        new Error('Internal server error'),
+      );
+
+      await expect(controller.verifyToken(verifyTokenDto)).rejects.toThrow(
+        'Internal server error',
+      );
+
       expect(authService.verifyTokenAndSyncUser).toHaveBeenCalledWith(
-        'invalid-token',
+        'valid-token',
       );
     });
 
-    it('should handle token extraction correctly', async () => {
-      const testCases = [
-        {
-          authorization: 'Bearer token123',
-          expectedToken: 'token123',
-        },
-        {
-          authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjE2NzAyN...',
-          expectedToken: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjE2NzAyN...',
-        },
-        {
-          authorization: 'Bearer token-with-dashes',
-          expectedToken: 'token-with-dashes',
-        },
-      ];
+    it('should return all required user fields', async () => {
+      const verifyTokenDto: VerifyTokenDto = {
+        token: 'valid-token',
+      };
 
       mockAuthService.verifyTokenAndSyncUser.mockResolvedValue(mockUser);
 
-      for (const testCase of testCases) {
-        await controller.getCurrentUser(testCase.authorization);
-        expect(authService.verifyTokenAndSyncUser).toHaveBeenCalledWith(
-          testCase.expectedToken,
-        );
-      }
+      const result = await controller.verifyToken(verifyTokenDto);
+
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('firebaseUid');
+      expect(result).toHaveProperty('email');
+      expect(result).toHaveProperty('name');
+      expect(result).toHaveProperty('role');
+      expect(result).toHaveProperty('status');
+      expect(result).toHaveProperty('profilePictureUrl');
+      expect(result).toHaveProperty('emailVerified');
+      expect(result).toHaveProperty('lastLoginAt');
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('updatedAt');
+    });
+  });
+
+  describe('getCurrentUser', () => {
+    it('should return current user data', () => {
+      const result = controller.getCurrentUser(mockUser);
+
+      expect(result).toEqual(expectedAuthResponse);
+    });
+
+    it('should return all required user fields', () => {
+      const result = controller.getCurrentUser(mockUser);
+
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('firebaseUid');
+      expect(result).toHaveProperty('email');
+      expect(result).toHaveProperty('name');
+      expect(result).toHaveProperty('role');
+      expect(result).toHaveProperty('status');
+      expect(result).toHaveProperty('profilePictureUrl');
+      expect(result).toHaveProperty('emailVerified');
+      expect(result).toHaveProperty('lastLoginAt');
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('updatedAt');
+    });
+
+    it('should handle user with null values', () => {
+      const userWithNulls: User = {
+        ...mockUser,
+        profilePictureUrl: undefined,
+        lastLoginAt: undefined,
+      } as User;
+
+      const result = controller.getCurrentUser(userWithNulls);
+
+      expect(result.profilePictureUrl).toBeUndefined();
+      expect(result.lastLoginAt).toBeUndefined();
+      expect(result.id).toBe(mockUser.id);
+      expect(result.email).toBe(mockUser.email);
+    });
+
+    it('should handle different user roles', () => {
+      const roles = [
+        UserRole.CUSTOMER,
+        UserRole.CREATOR,
+        UserRole.FACTORY,
+        UserRole.ADMIN,
+      ];
+
+      roles.forEach((role) => {
+        const userWithRole: User = {
+          ...mockUser,
+          role,
+        } as User;
+
+        const result = controller.getCurrentUser(userWithRole);
+
+        expect(result.role).toBe(role);
+      });
+    });
+
+    it('should handle different user statuses', () => {
+      const statuses = [
+        UserStatus.ACTIVE,
+        UserStatus.SUSPENDED,
+        UserStatus.DELETED,
+      ];
+
+      statuses.forEach((status) => {
+        const userWithStatus: User = {
+          ...mockUser,
+          status,
+        } as User;
+
+        const result = controller.getCurrentUser(userWithStatus);
+
+        expect(result.status).toBe(status);
+      });
     });
   });
 });

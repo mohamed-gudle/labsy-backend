@@ -40,10 +40,10 @@
 
 ## Tasks
 
-- [ ] 1.0 Set up Authentication Module and Firebase Integration  - [x] 1.1 Install required dependencies: `yarn add firebase-admin @google-cloud/storage class-validator class-transformer @nestjs/swagger @nestjs/typeorm @nestjs/config`  - [x] 1.2 Generate auth module using NestJS CLI: `nest g module auth`  - [x] 1.3 Generate auth controller: `nest g controller auth`  - [x] 1.4 Generate auth service: `nest g service auth`  - [x] 1.5 Configure Firebase Admin SDK in auth service with environment variables  - [x] 1.6 Create Firebase token verification method in auth service  - [x] 1.7 Implement user synchronization logic between Firebase and local database  - [x] 1.8 Add environment variables for Firebase configuration to .env file  - [x] 1.9 Create auth endpoints: `POST /auth/verify` and `GET /auth/me`
+- [x] 1.0 Set up Authentication Module and Firebase Integration  - [x] 1.1 Install required dependencies: `yarn add firebase-admin @google-cloud/storage class-validator class-transformer @nestjs/swagger @nestjs/typeorm @nestjs/config`  - [x] 1.2 Generate auth module using NestJS CLI: `nest g module auth`  - [x] 1.3 Generate auth controller: `nest g controller auth`  - [x] 1.4 Generate auth service: `nest g service auth`  - [x] 1.5 Configure Firebase Admin SDK in auth service with environment variables  - [x] 1.6 Create Firebase token verification method in auth service  - [x] 1.7 Implement user synchronization logic between Firebase and local database  - [x] 1.8 Add environment variables for Firebase configuration to .env file  - [x] 1.9 Create auth endpoints: `POST /auth/verify` and `GET /auth/me`
   - [x] 1.10 Add Swagger documentation decorators to auth endpoints
-  - [ ] 1.11 Write unit tests for auth service Firebase integration
-  - [ ] 1.12 Write unit tests for auth controller endpoints
+  - [x] 1.11 Write unit tests for auth service Firebase integration
+  - [x] 1.12 Write unit tests for auth controller endpoints
 
 - [x] 2.0 Implement User Entities and Database Schema  - [x] 2.1 Generate users module: `nest g module users`  - [x] 2.2 Create base User entity with common fields (id, firebaseUid, email, name, role, status, timestamps)
   - [x] 2.3 Create Customer entity extending User with customer-specific fields (phone, preferredLanguage, shippingAddresses)
