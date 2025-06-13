@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+/* eslint-disable @typescript-eslint/unbound-method */
 import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UnauthorizedException } from '@nestjs/common';
-import { AuthService, FirebaseUser } from './auth.service';
-import { User } from '../users/entities';
-import { UserRole, UserStatus } from '../users/enums';
 import * as admin from 'firebase-admin';
+import { Repository, UpdateResult } from 'typeorm';
+import { Admin, Creator, Customer, Factory, User } from '../users/entities';
+import { UserRole, UserStatus } from '../users/enums';
+import { AuthService, FirebaseUser } from './auth.service';
 
 // Mock Firebase Admin
 jest.mock('firebase-admin', () => ({
@@ -14,45 +14,43 @@ jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
   credential: {
     cert: jest.fn().mockReturnValue({
-      // Mock credential object
       type: 'service_account',
       project_id: 'test-project',
-      client_email: 'test@test-project.iam.gserviceaccount.com',
+      client_email: 'test@test.com',
     }),
   },
-  auth: jest.fn(() => ({
-    verifyIdToken: jest.fn(),
-    getUser: jest.fn(),
-  })),
+  auth: jest.fn(),
 }));
 
 describe('AuthService', () => {
   let service: AuthService;
-  let configService: ConfigService;
   let userRepository: Repository<User>;
-  let mockFirebaseAuth: any;
+  let mockAuth: {
+    verifyIdToken: jest.Mock;
+    getUser: jest.Mock;
+  };
 
   const mockUser: User = {
-    id: '550e8400-e29b-41d4-a716-446655440000',
+    id: '1',
     firebaseUid: 'firebase-uid-123',
     email: 'test@example.com',
     name: 'Test User',
     role: UserRole.CUSTOMER,
     status: UserStatus.ACTIVE,
-    profilePictureUrl: 'https://example.com/avatar.jpg',
     emailVerified: true,
-    lastLoginAt: new Date('2025-06-12T10:30:00Z'),
-    createdAt: new Date('2025-06-01T10:30:00Z'),
-    updatedAt: new Date('2025-06-12T10:30:00Z'),
+    profilePictureUrl: 'https://example.com/picture.jpg',
+    lastLoginAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
     deletedAt: undefined,
-  };
+  } as User;
 
   const mockFirebaseUser: FirebaseUser = {
     uid: 'firebase-uid-123',
     email: 'test@example.com',
     emailVerified: true,
     name: 'Test User',
-    picture: 'https://example.com/avatar.jpg',
+    picture: 'https://example.com/picture.jpg',
   };
 
   const mockDecodedToken = {
@@ -60,19 +58,19 @@ describe('AuthService', () => {
     email: 'test@example.com',
     email_verified: true,
     name: 'Test User',
-    picture: 'https://example.com/avatar.jpg',
+    picture: 'https://example.com/picture.jpg',
   };
 
-  const mockUserRecord = {
+  const mockFirebaseUserRecord = {
     uid: 'firebase-uid-123',
     email: 'test@example.com',
     emailVerified: true,
     displayName: 'Test User',
-    photoURL: 'https://example.com/avatar.jpg',
+    photoURL: 'https://example.com/picture.jpg',
   };
 
   beforeEach(async () => {
-    mockFirebaseAuth = {
+    mockAuth = {
       verifyIdToken: jest.fn(),
       getUser: jest.fn(),
     };
@@ -83,16 +81,16 @@ describe('AuthService', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn().mockImplementation((key: string) => {
+            get: jest.fn((key: string) => {
               switch (key) {
                 case 'FIREBASE_PROJECT_ID':
                   return 'test-project';
                 case 'FIREBASE_CLIENT_EMAIL':
-                  return 'test@test-project.iam.gserviceaccount.com';
+                  return 'test@test.com';
                 case 'FIREBASE_PRIVATE_KEY':
-                  return '-----BEGIN PRIVATE KEY-----\\ntest-key\\n-----END PRIVATE KEY-----';
+                  return 'test-key';
                 default:
-                  return undefined;
+                  return null;
               }
             }),
           },
@@ -101,7 +99,6 @@ describe('AuthService', () => {
           provide: getRepositoryToken(User),
           useValue: {
             findOne: jest.fn(),
-            create: jest.fn(),
             save: jest.fn(),
             update: jest.fn(),
           },
@@ -110,11 +107,10 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    configService = module.get<ConfigService>(ConfigService);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
 
-    // Mock Firebase admin.auth()
-    (admin.auth as jest.Mock).mockReturnValue(mockFirebaseAuth);
+    // Mock Firebase auth instance
+    (admin.auth as jest.Mock).mockReturnValue(mockAuth);
   });
 
   afterEach(() => {
@@ -122,10 +118,10 @@ describe('AuthService', () => {
   });
 
   describe('onModuleInit', () => {
-    it('should initialize Firebase Admin SDK successfully', () => {
-      // Clear the apps array to simulate uninitialized state
-      (admin.apps as any) = [];
-      
+    it('should initialize Firebase Admin SDK when no apps exist', () => {
+      // Reset apps to empty array
+      (admin.apps as unknown[]) = [];
+
       service.onModuleInit();
 
       expect(admin.initializeApp).toHaveBeenCalledWith({
@@ -133,47 +129,46 @@ describe('AuthService', () => {
       });
     });
 
-    it('should not initialize Firebase Admin SDK if already initialized', () => {
-      // Simulate already initialized state
-      (admin.apps as any) = [{}];
-      
+    it('should not initialize Firebase Admin SDK when app already exists', () => {
+      // Set apps to have an existing app
+      (admin.apps as unknown[]) = [{ name: 'test-app' }];
+
       service.onModuleInit();
 
       expect(admin.initializeApp).not.toHaveBeenCalled();
     });
 
-    it('should throw error if Firebase initialization fails', () => {
-      (admin.apps as any) = [];
+    it('should handle initialization errors', () => {
+      (admin.apps as unknown[]) = [];
       (admin.initializeApp as jest.Mock).mockImplementation(() => {
-        throw new Error('Firebase initialization failed');
+        throw new Error('Initialization failed');
       });
 
-      expect(() => service.onModuleInit()).toThrow('Firebase initialization failed');
+      expect(() => service.onModuleInit()).toThrow('Initialization failed');
     });
   });
 
   describe('verifyToken', () => {
-    it('should verify token and return Firebase user', async () => {
-      mockFirebaseAuth.verifyIdToken.mockResolvedValue(mockDecodedToken);
+    it('should verify token and return FirebaseUser', async () => {
+      mockAuth.verifyIdToken.mockResolvedValue(mockDecodedToken);
 
       const result = await service.verifyToken('valid-token');
 
-      expect(mockFirebaseAuth.verifyIdToken).toHaveBeenCalledWith('valid-token');
+      expect(mockAuth.verifyIdToken).toHaveBeenCalledWith('valid-token');
       expect(result).toEqual(mockFirebaseUser);
     });
 
     it('should throw UnauthorizedException for invalid token', async () => {
-      mockFirebaseAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
+      mockAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
 
       await expect(service.verifyToken('invalid-token')).rejects.toThrow(
-        UnauthorizedException,
+        'Invalid or expired token',
       );
-      expect(mockFirebaseAuth.verifyIdToken).toHaveBeenCalledWith('invalid-token');
     });
 
     it('should handle missing email in token', async () => {
       const tokenWithoutEmail = { ...mockDecodedToken, email: undefined };
-      mockFirebaseAuth.verifyIdToken.mockResolvedValue(tokenWithoutEmail);
+      mockAuth.verifyIdToken.mockResolvedValue(tokenWithoutEmail);
 
       const result = await service.verifyToken('valid-token');
 
@@ -183,16 +178,16 @@ describe('AuthService', () => {
 
   describe('getUserById', () => {
     it('should get user by Firebase UID', async () => {
-      mockFirebaseAuth.getUser.mockResolvedValue(mockUserRecord);
+      mockAuth.getUser.mockResolvedValue(mockFirebaseUserRecord);
 
       const result = await service.getUserById('firebase-uid-123');
 
-      expect(mockFirebaseAuth.getUser).toHaveBeenCalledWith('firebase-uid-123');
+      expect(mockAuth.getUser).toHaveBeenCalledWith('firebase-uid-123');
       expect(result).toEqual(mockFirebaseUser);
     });
 
-    it('should return null if user not found', async () => {
-      mockFirebaseAuth.getUser.mockRejectedValue(new Error('User not found'));
+    it('should return null when user not found', async () => {
+      mockAuth.getUser.mockRejectedValue(new Error('User not found'));
 
       const result = await service.getUserById('non-existent-uid');
 
@@ -200,8 +195,11 @@ describe('AuthService', () => {
     });
 
     it('should handle missing email in user record', async () => {
-      const userRecordWithoutEmail = { ...mockUserRecord, email: undefined };
-      mockFirebaseAuth.getUser.mockResolvedValue(userRecordWithoutEmail);
+      const userRecordWithoutEmail = {
+        ...mockFirebaseUserRecord,
+        email: undefined,
+      };
+      mockAuth.getUser.mockResolvedValue(userRecordWithoutEmail);
 
       const result = await service.getUserById('firebase-uid-123');
 
@@ -210,7 +208,7 @@ describe('AuthService', () => {
   });
 
   describe('findOrCreateUser', () => {
-    it('should update existing user', async () => {
+    it('should return existing user and update info', async () => {
       const existingUser = { ...mockUser };
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(existingUser);
       jest.spyOn(userRepository, 'save').mockResolvedValue(existingUser);
@@ -224,45 +222,67 @@ describe('AuthService', () => {
       expect(result).toEqual(existingUser);
     });
 
-    it('should create new user if not found', async () => {
+    it('should create new customer user when user does not exist', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-      jest.spyOn(userRepository, 'create').mockReturnValue(mockUser);
-      jest.spyOn(userRepository, 'save').mockResolvedValue(mockUser);
+      const newCustomer = new Customer();
+      Object.assign(newCustomer, mockUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(newCustomer);
 
-      const result = await service.findOrCreateUser(mockFirebaseUser, UserRole.CREATOR);
+      const result = await service.findOrCreateUser(
+        mockFirebaseUser,
+        UserRole.CUSTOMER,
+      );
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { firebaseUid: mockFirebaseUser.uid },
-      });
-      expect(userRepository.create).toHaveBeenCalledWith({
-        firebaseUid: mockFirebaseUser.uid,
-        email: mockFirebaseUser.email,
-        name: mockFirebaseUser.name,
-        role: UserRole.CREATOR,
-        status: UserStatus.ACTIVE,
-        emailVerified: mockFirebaseUser.emailVerified,
-        profilePictureUrl: mockFirebaseUser.picture,
-        lastLoginAt: expect.any(Date),
-      });
-      expect(result).toEqual(mockUser);
+      expect(userRepository.save).toHaveBeenCalled();
+      expect(result).toBeInstanceOf(Customer);
     });
 
-    it('should use default CUSTOMER role when no role provided', async () => {
+    it('should create new creator user', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-      jest.spyOn(userRepository, 'create').mockReturnValue(mockUser);
-      jest.spyOn(userRepository, 'save').mockResolvedValue(mockUser);
+      const newCreator = new Creator();
+      Object.assign(newCreator, mockUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(newCreator);
 
-      await service.findOrCreateUser(mockFirebaseUser);
-
-      expect(userRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          role: UserRole.CUSTOMER,
-        }),
+      const result = await service.findOrCreateUser(
+        mockFirebaseUser,
+        UserRole.CREATOR,
       );
+
+      expect(result).toBeInstanceOf(Creator);
+    });
+
+    it('should create new factory user', async () => {
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+      const newFactory = new Factory();
+      Object.assign(newFactory, mockUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(newFactory);
+
+      const result = await service.findOrCreateUser(
+        mockFirebaseUser,
+        UserRole.FACTORY,
+      );
+
+      expect(result).toBeInstanceOf(Factory);
+    });
+
+    it('should create new admin user', async () => {
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+      const newAdmin = new Admin();
+      Object.assign(newAdmin, mockUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(newAdmin);
+
+      const result = await service.findOrCreateUser(
+        mockFirebaseUser,
+        UserRole.ADMIN,
+      );
+
+      expect(result).toBeInstanceOf(Admin);
     });
 
     it('should handle repository errors', async () => {
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(new Error('Database error'));
+      jest
+        .spyOn(userRepository, 'findOne')
+        .mockRejectedValue(new Error('Database error'));
 
       await expect(service.findOrCreateUser(mockFirebaseUser)).rejects.toThrow(
         'Database error',
@@ -271,19 +291,21 @@ describe('AuthService', () => {
   });
 
   describe('syncUserFromFirebase', () => {
-    it('should sync user from Firebase successfully', async () => {
-      mockFirebaseAuth.getUser.mockResolvedValue(mockUserRecord);
-      jest.spyOn(service, 'findOrCreateUser').mockResolvedValue(mockUser);
+    it('should sync user from Firebase', async () => {
+      mockAuth.getUser.mockResolvedValue(mockFirebaseUserRecord);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+      const newUser = new Customer();
+      Object.assign(newUser, mockUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(newUser);
 
       const result = await service.syncUserFromFirebase('firebase-uid-123');
 
-      expect(mockFirebaseAuth.getUser).toHaveBeenCalledWith('firebase-uid-123');
-      expect(service.findOrCreateUser).toHaveBeenCalledWith(mockFirebaseUser);
-      expect(result).toEqual(mockUser);
+      expect(mockAuth.getUser).toHaveBeenCalledWith('firebase-uid-123');
+      expect(result).toEqual(newUser);
     });
 
-    it('should return null if Firebase user not found', async () => {
-      mockFirebaseAuth.getUser.mockRejectedValue(new Error('User not found'));
+    it('should return null when Firebase user not found', async () => {
+      mockAuth.getUser.mockRejectedValue(new Error('User not found'));
 
       const result = await service.syncUserFromFirebase('non-existent-uid');
 
@@ -292,28 +314,28 @@ describe('AuthService', () => {
   });
 
   describe('verifyTokenAndSyncUser', () => {
-    it('should verify token and sync user successfully', async () => {
-      mockFirebaseAuth.verifyIdToken.mockResolvedValue(mockDecodedToken);
-      jest.spyOn(service, 'findOrCreateUser').mockResolvedValue(mockUser);
+    it('should verify token and sync user', async () => {
+      mockAuth.verifyIdToken.mockResolvedValue(mockDecodedToken);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(mockUser);
 
       const result = await service.verifyTokenAndSyncUser('valid-token');
 
-      expect(mockFirebaseAuth.verifyIdToken).toHaveBeenCalledWith('valid-token');
-      expect(service.findOrCreateUser).toHaveBeenCalledWith(mockFirebaseUser);
+      expect(mockAuth.verifyIdToken).toHaveBeenCalledWith('valid-token');
       expect(result).toEqual(mockUser);
     });
 
     it('should throw UnauthorizedException for invalid token', async () => {
-      mockFirebaseAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
+      mockAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
 
-      await expect(service.verifyTokenAndSyncUser('invalid-token')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.verifyTokenAndSyncUser('invalid-token'),
+      ).rejects.toThrow('Invalid or expired token');
     });
   });
 
   describe('getUserByFirebaseUid', () => {
-    it('should get user by Firebase UID from database', async () => {
+    it('should get user by Firebase UID', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser);
 
       const result = await service.getUserByFirebaseUid('firebase-uid-123');
@@ -324,7 +346,7 @@ describe('AuthService', () => {
       expect(result).toEqual(mockUser);
     });
 
-    it('should return null if user not found in database', async () => {
+    it('should return null when user not found', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
 
       const result = await service.getUserByFirebaseUid('non-existent-uid');
@@ -332,8 +354,10 @@ describe('AuthService', () => {
       expect(result).toBeNull();
     });
 
-    it('should handle database errors', async () => {
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(new Error('Database error'));
+    it('should handle repository errors', async () => {
+      jest
+        .spyOn(userRepository, 'findOne')
+        .mockRejectedValue(new Error('Database error'));
 
       const result = await service.getUserByFirebaseUid('firebase-uid-123');
 
@@ -342,30 +366,59 @@ describe('AuthService', () => {
   });
 
   describe('updateUserLastLogin', () => {
-    it('should update user last login timestamp', async () => {
-      jest.spyOn(userRepository, 'update').mockResolvedValue({ affected: 1 } as any);
+    it('should update user last login', async () => {
+      const updateResult: UpdateResult = {
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      };
+      jest.spyOn(userRepository, 'update').mockResolvedValue(updateResult);
 
-      await service.updateUserLastLogin('user-id-123');
+      await service.updateUserLastLogin('user-id');
 
-      expect(userRepository.update).toHaveBeenCalledWith('user-id-123', {
+      expect(userRepository.update).toHaveBeenCalledWith('user-id', {
         lastLoginAt: expect.any(Date),
       });
     });
 
-    it('should handle update errors gracefully', async () => {
-      jest.spyOn(userRepository, 'update').mockRejectedValue(new Error('Update failed'));
+    it('should handle update errors', async () => {
+      jest
+        .spyOn(userRepository, 'update')
+        .mockRejectedValue(new Error('Update failed'));
 
-      // Should not throw error
-      await expect(service.updateUserLastLogin('user-id-123')).resolves.toBeUndefined();
+      // Should not throw, just log error
+      await expect(
+        service.updateUserLastLogin('user-id'),
+      ).resolves.toBeUndefined();
     });
   });
 
-  describe('getAuth', () => {
-    it('should return Firebase Auth instance', () => {
-      const result = service.getAuth();
+  describe('verifyFirebaseToken', () => {
+    it('should verify Firebase token', async () => {
+      mockAuth.verifyIdToken.mockResolvedValue(mockDecodedToken);
 
-      expect(admin.auth).toHaveBeenCalled();
-      expect(result).toBe(mockFirebaseAuth);
+      const result = await service.verifyFirebaseToken('valid-token');
+
+      expect(mockAuth.verifyIdToken).toHaveBeenCalledWith('valid-token');
+      expect(result).toEqual(mockDecodedToken);
+    });
+
+    it('should throw UnauthorizedException for invalid token', async () => {
+      mockAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
+
+      await expect(
+        service.verifyFirebaseToken('invalid-token'),
+      ).rejects.toThrow('Invalid or expired token');
+    });
+  });
+
+  describe('findUserByFirebaseUid', () => {
+    it('should find user by Firebase UID', async () => {
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser);
+
+      const result = await service.findUserByFirebaseUid('firebase-uid-123');
+
+      expect(result).toEqual(mockUser);
     });
   });
 });

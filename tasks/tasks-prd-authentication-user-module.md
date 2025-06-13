@@ -56,18 +56,18 @@
   - [x] 2.10 Add soft delete functionality to User entity (@DeleteDateColumn)
   - [x] 2.11 Configure TypeORM in users module to register all entities
 
-- [ ] 3.0 Create Role-Based Authorization System
-  - [ ] 3.1 Create firebase-auth.guard.ts for token verification
-  - [ ] 3.2 Create roles.guard.ts for role-based access control
-  - [ ] 3.3 Create @CurrentUser() decorator to inject authenticated user
-  - [ ] 3.4 Create @Roles() decorator for endpoint role restrictions
-  - [ ] 3.5 Implement guard logic to verify Firebase tokens and fetch user from database
-  - [ ] 3.6 Implement guard logic to check user roles and permissions
-  - [ ] 3.7 Add error handling for invalid tokens and unauthorized access
-  - [ ] 3.8 Create custom exception filters for authentication errors
-  - [ ] 3.9 Write unit tests for firebase-auth.guard
-  - [ ] 3.10 Write unit tests for roles.guard
-  - [ ] 3.11 Write unit tests for custom decorators
+- [x] 3.0 Create Role-Based Authorization System
+  - [x] 3.1 Create firebase-auth.guard.ts for token verification
+  - [x] 3.2 Create roles.guard.ts for role-based access control
+  - [x] 3.3 Create @CurrentUser() decorator to inject authenticated user
+  - [x] 3.4 Create @Roles() decorator for endpoint role restrictions
+  - [x] 3.5 Implement guard logic to verify Firebase tokens and fetch user from database
+  - [x] 3.6 Implement guard logic to check user roles and permissions
+  - [x] 3.7 Add error handling for invalid tokens and unauthorized access
+  - [x] 3.8 Create custom exception filters for authentication errors
+  - [x] 3.9 Write unit tests for firebase-auth.guard
+  - [x] 3.10 Write unit tests for roles.guard
+  - [x] 3.11 Write unit tests for custom decorators
 
 - [ ] 4.0 Build User Registration and Profile Management
   - [ ] 4.1 Generate users controller: `nest g controller users`

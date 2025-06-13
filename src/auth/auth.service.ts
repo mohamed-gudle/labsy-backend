@@ -217,4 +217,17 @@ export class AuthService implements OnModuleInit {
       );
     }
   }
+
+  async verifyFirebaseToken(token: string): Promise<admin.auth.DecodedIdToken> {
+    try {
+      return await this.getAuth().verifyIdToken(token);
+    } catch (error) {
+      this.logger.error('Firebase token verification failed', error);
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+  async findUserByFirebaseUid(firebaseUid: string): Promise<User | null> {
+    return this.getUserByFirebaseUid(firebaseUid);
+  }
 }

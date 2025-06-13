@@ -1,14 +1,15 @@
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Headers,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { VerifyTokenDto, AuthResponseDto } from './dto';
+import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -53,14 +54,11 @@ export class AuthController {
   }
 
   @Get('me')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get current user information',
     description: 'Returns the current authenticated user information',
-  })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer token',
-    required: true,
   })
   @ApiResponse({
     status: 200,
@@ -71,21 +69,7 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - Invalid or missing token',
   })
-  async getCurrentUser(
-    @Headers('authorization') authorization?: string,
-  ): Promise<AuthResponseDto> {
-    if (!authorization) {
-      throw new UnauthorizedException('Authorization header is required');
-    }
-
-    // Extract token from "Bearer <token>" format
-    const token = authorization.replace('Bearer ', '');
-    if (!token || token === authorization) {
-      throw new UnauthorizedException('Invalid authorization header format');
-    }
-
-    const user = await this.authService.verifyTokenAndSyncUser(token);
-
+  getCurrentUser(@CurrentUser() user: User): AuthResponseDto {
     return {
       id: user.id,
       firebaseUid: user.firebaseUid,

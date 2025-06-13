@@ -6,6 +6,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS for frontend applications
+  app.enableCors({
+    origin: true, // Allow all origins in development, restrict in production
+    credentials: true,
+  });
+
   // Enable validation pipes
   app.useGlobalPipes(
     new ValidationPipe({
@@ -25,7 +31,7 @@ async function bootstrap() {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        name: 'JWT',
+        name: 'authorization',
         description: 'Enter Firebase JWT token',
         in: 'header',
       },
