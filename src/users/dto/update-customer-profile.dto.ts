@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength, MaxLength, IsPhoneNumber } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  MinLength,
+  MaxLength,
+  IsPhoneNumber,
+  Matches,
+} from 'class-validator';
+import { IsValidLanguage } from './validators';
 
 export class UpdateCustomerProfileDto {
   @ApiPropertyOptional({
@@ -7,9 +15,13 @@ export class UpdateCustomerProfileDto {
     example: 'Ahmed Mohammed Al-Rashid',
   })
   @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(100)
+  @IsString({ message: 'Name must be a string' })
+  @MinLength(2, { message: 'Name must be at least 2 characters long' })
+  @MaxLength(100, { message: 'Name cannot exceed 100 characters' })
+  @Matches(/^[a-zA-Z\u0600-\u06FF\s.-]+$/, {
+    message:
+      'Name can only contain letters, spaces, dots, and hyphens (Arabic and English supported)',
+  })
   name?: string;
 
   @ApiPropertyOptional({
@@ -17,7 +29,10 @@ export class UpdateCustomerProfileDto {
     example: '+966501234567',
   })
   @IsOptional()
-  @IsPhoneNumber('SA') // Saudi Arabia phone format
+  @IsPhoneNumber('SA', {
+    message:
+      'Please provide a valid Saudi Arabian phone number with country code (+966)',
+  })
   phone?: string;
 
   @ApiPropertyOptional({
@@ -26,6 +41,9 @@ export class UpdateCustomerProfileDto {
     enum: ['ar', 'en'],
   })
   @IsOptional()
-  @IsString()
+  @IsValidLanguage({
+    message:
+      'Preferred language must be either "ar" (Arabic) or "en" (English)',
+  })
   preferredLanguage?: string;
 }

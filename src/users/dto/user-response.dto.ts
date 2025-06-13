@@ -147,7 +147,8 @@ export class CreatorResponseDto extends UserResponseDto {
 
   @ApiPropertyOptional({
     description: 'Business description',
-    example: 'Creating unique Arabic calligraphy designs for custom merchandise',
+    example:
+      'Creating unique Arabic calligraphy designs for custom merchandise',
   })
   businessDescription?: string;
 

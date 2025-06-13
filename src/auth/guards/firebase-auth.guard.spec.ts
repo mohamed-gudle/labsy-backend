@@ -42,7 +42,7 @@ describe('FirebaseAuthGuard', () => {
     const createMockExecutionContext = (request: any): ExecutionContext => {
         return {
             switchToHttp: () => ({
-                getRequest: () => request,
+                getRequest: (): any => request,
                 getResponse: jest.fn(),
                 getNext: jest.fn(),
             }),

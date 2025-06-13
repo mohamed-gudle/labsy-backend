@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { User, Customer, Creator, Factory, Admin } from './users/entities';
+import { UploadsModule } from './uploads/uploads.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -21,12 +23,17 @@ import { User, Customer, Creator, Factory, Admin } from './users/entities';
         entities: [User, Customer, Creator, Factory, Admin],
         synchronize: configService.get<string>('NODE_ENV') === 'development',
         logging: configService.get<string>('NODE_ENV') === 'development',
-        ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+        ssl:
+          configService.get<string>('NODE_ENV') === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
       }),
       inject: [ConfigService],
     }),
     AuthModule,
     UsersModule,
+    UploadsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -206,6 +206,34 @@ export class UsersService {
     return this.mapCreatorToResponse(savedCreator as Creator);
   }
 
+  async updateProfilePicture(
+    userId: string,
+    profilePictureUrl: string | null,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    user.profilePictureUrl = profilePictureUrl ?? undefined;
+
+    // Update profile completion percentage
+    if (user.role === UserRole.CUSTOMER) {
+      const customer = user as Customer;
+      customer.profileCompletionPercentage =
+        this.calculateCustomerProfileCompletion(customer);
+    } else if (user.role === UserRole.CREATOR) {
+      const creator = user as Creator;
+      creator.profileCompletionPercentage =
+        this.calculateCreatorProfileCompletion(creator);
+    }
+
+    await this.userRepository.save(user);
+  }
+
   private mapCustomerToResponse(customer: Customer): CustomerResponseDto {
     return {
       id: customer.id,

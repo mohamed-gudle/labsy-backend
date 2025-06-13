@@ -8,7 +8,6 @@ import { RolesGuard } from './roles.guard';
 
 describe('RolesGuard', () => {
     let guard: RolesGuard;
-    let reflector: Reflector;
 
     const mockUser: Partial<User> = {
         id: '550e8400-e29b-41d4-a716-446655440000',
@@ -25,7 +24,7 @@ describe('RolesGuard', () => {
     const createMockExecutionContext = (request: any): ExecutionContext => {
         return {
             switchToHttp: () => ({
-                getRequest: () => request,
+                getRequest: (): any => request,
                 getResponse: jest.fn(),
                 getNext: jest.fn(),
             }),
@@ -51,7 +50,6 @@ describe('RolesGuard', () => {
         }).compile();
 
         guard = module.get<RolesGuard>(RolesGuard);
-        reflector = module.get<Reflector>(Reflector);
     });
 
     afterEach(() => {
@@ -72,7 +70,7 @@ describe('RolesGuard', () => {
             const result = guard.canActivate(context);
 
             expect(result).toBe(true);
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -87,7 +85,7 @@ describe('RolesGuard', () => {
             const result = guard.canActivate(context);
 
             expect(result).toBe(true);
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -102,7 +100,7 @@ describe('RolesGuard', () => {
             const result = guard.canActivate(context);
 
             expect(result).toBe(true);
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -121,7 +119,7 @@ describe('RolesGuard', () => {
             const result = guard.canActivate(context);
 
             expect(result).toBe(true);
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -138,7 +136,7 @@ describe('RolesGuard', () => {
                 'User not found. Make sure FirebaseAuthGuard is applied first.',
             );
 
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -155,7 +153,7 @@ describe('RolesGuard', () => {
                 `Access denied. Required roles: ${UserRole.ADMIN}. User role: ${UserRole.CUSTOMER}`,
             );
 
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -173,7 +171,7 @@ describe('RolesGuard', () => {
                 `Access denied. Required roles: ${requiredRoles.join(', ')}. User role: ${UserRole.CUSTOMER}`,
             );
 
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
@@ -203,7 +201,7 @@ describe('RolesGuard', () => {
                 },
             ];
 
-            testCases.forEach(({ userRole, requiredRoles, shouldPass }, index) => {
+            testCases.forEach(({ userRole, requiredRoles, shouldPass }) => {
                 const userWithRole = { ...mockUser, role: userRole };
                 const mockRequest = { user: userWithRole };
                 const context = createMockExecutionContext(mockRequest);
@@ -254,11 +252,11 @@ describe('RolesGuard', () => {
 
             guard.canActivate(context);
 
-            expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
                 context.getHandler(),
                 context.getClass(),
             ]);
-            expect(reflector.getAllAndOverride).toHaveBeenCalledTimes(1);
+            expect(mockReflector.getAllAndOverride).toHaveBeenCalledTimes(1);
         });
     });
 });

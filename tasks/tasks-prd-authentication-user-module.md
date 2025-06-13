@@ -78,31 +78,31 @@
   - [x] 4.6 Create response DTOs for user data (UserResponseDto, CustomerResponseDto, CreatorResponseDto)
   - [x] 4.7 Implement registration endpoints: `POST /auth/register/customer` and `POST /auth/register/creator`
   - [x] 4.8 Implement profile management endpoints: `GET /users/profile` and `PUT /users/profile`
-  - [ ] 4.9 Add validation logic for role-specific profile fields
-  - [ ] 4.10 Implement profile completion percentage calculation
-  - [ ] 4.11 Generate uploads module for profile pictures: `nest g module uploads`
-  - [ ] 4.12 Create Google Cloud Storage service for file uploads
-  - [ ] 4.13 Implement profile picture upload endpoint: `POST /users/profile/picture`
-  - [ ] 4.14 Implement profile picture delete endpoint: `DELETE /users/profile/picture`
-  - [ ] 4.15 Add file validation (size limits, formats) for profile pictures
-  - [ ] 4.16 Write unit tests for users service methods
-  - [ ] 4.17 Write unit tests for users controller endpoints
-  - [ ] 4.18 Write unit tests for uploads service
+  - [x] 4.9 Add validation logic for role-specific profile fields
+  - [x] 4.10 Implement profile completion percentage calculation
+  - [x] 4.11 Generate uploads module for profile pictures: `nest g module uploads`
+  - [x] 4.12 Create Google Cloud Storage service for file uploads
+  - [x] 4.13 Implement profile picture upload endpoint: `POST /users/profile/picture`
+  - [x] 4.14 Implement profile picture delete endpoint: `DELETE /users/profile/picture`
+  - [x] 4.15 Add file validation (size limits, formats) for profile pictures
+  - [x] 4.16 Write unit tests for users service methods
+  - [x] 4.17 Write unit tests for users controller endpoints
+  - [x] 4.18 Write unit tests for uploads service
 
-- [ ] 5.0 Implement Admin User Management Features
-  - [ ] 5.1 Generate admin module: `nest g module admin`
-  - [ ] 5.2 Generate admin controller: `nest g controller admin`
-  - [ ] 5.3 Generate admin service: `nest g service admin`
-  - [ ] 5.4 Create DTOs for factory account creation (CreateFactoryDto)
-  - [ ] 5.5 Create DTOs for admin account creation (CreateAdminDto)
-  - [ ] 5.6 Create DTOs for user status updates (UpdateUserStatusDto)
-  - [ ] 5.7 Implement factory creation endpoint: `POST /admin/users/factory`
-  - [ ] 5.8 Implement admin creation endpoint: `POST /admin/users/admin`
-  - [ ] 5.9 Implement user status management: `PUT /admin/users/:id/status`
-  - [ ] 5.10 Implement soft delete endpoint: `DELETE /admin/users/:id`
-  - [ ] 5.11 Add audit logging for all admin actions
-  - [ ] 5.12 Implement user listing and search functionality for admins
-  - [ ] 5.13 Add role-based guards to restrict admin endpoints to ADMIN role only
-  - [ ] 5.14 Write unit tests for admin service methods
-  - [ ] 5.15 Write unit tests for admin controller endpoints
+- [x] 5.0 Implement Admin User Management Features
+  - [x] 5.1 Generate admin module: `nest g module admin`
+  - [x] 5.2 Generate admin controller: `nest g controller admin`
+  - [x] 5.3 Generate admin service: `nest g service admin`
+  - [x] 5.4 Create DTOs for factory account creation (CreateFactoryDto)
+  - [x] 5.5 Create DTOs for admin account creation (CreateAdminDto)
+  - [x] 5.6 Create DTOs for user status updates (UpdateUserStatusDto)
+  - [x] 5.7 Implement factory creation endpoint: `POST /admin/users/factory`
+  - [x] 5.8 Implement admin creation endpoint: `POST /admin/users/admin`
+  - [x] 5.9 Implement user status management: `PUT /admin/users/:id/status`
+  - [x] 5.10 Implement soft delete endpoint: `DELETE /admin/users/:id`
+  - [x] 5.11 Add audit logging for all admin actions
+  - [x] 5.12 Implement user listing and search functionality for admins
+  - [x] 5.13 Add role-based guards to restrict admin endpoints to ADMIN role only
+  - [x] 5.14 Write unit tests for admin service methods
+  - [x] 5.15 Write unit tests for admin controller endpoints
   - [ ] 5.16 Create integration tests for end-to-end admin workflows

@@ -1,7 +1,11 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface } from 'typeorm';
 
 export class InitialMigration1749747492295 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {}
+    public async up(): Promise<void> {
+        // Empty migration - no changes needed
+    }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {}
+    public async down(): Promise<void> {
+        // Empty migration - no changes needed
+    }
 }

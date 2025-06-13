@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -120,7 +121,7 @@ describe('AuthService', () => {
   describe('onModuleInit', () => {
     it('should initialize Firebase Admin SDK when no apps exist', () => {
       // Reset apps to empty array
-      (admin.apps as unknown[]) = [];
+      (admin.apps as admin.app.App[]) = [];
 
       service.onModuleInit();
 
@@ -131,7 +132,7 @@ describe('AuthService', () => {
 
     it('should not initialize Firebase Admin SDK when app already exists', () => {
       // Set apps to have an existing app
-      (admin.apps as unknown[]) = [{ name: 'test-app' }];
+      (admin.apps as admin.app.App[]) = [{ name: 'test-app' } as admin.app.App];
 
       service.onModuleInit();
 
@@ -139,8 +140,9 @@ describe('AuthService', () => {
     });
 
     it('should handle initialization errors', () => {
-      (admin.apps as unknown[]) = [];
-      (admin.initializeApp as jest.Mock).mockImplementation(() => {
+      (admin.apps as admin.app.App[]) = [];
+      const mockInitializeApp = admin.initializeApp as jest.Mock;
+      mockInitializeApp.mockImplementation(() => {
         throw new Error('Initialization failed');
       });
 
