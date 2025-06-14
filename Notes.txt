@@ -1,0 +1,7 @@
+Best Practices Moving Forward
+Always generate migrations for entity changes - Don't rely on synchronize: true
+Review generated migrations before running them
+Use descriptive migration names that explain what they do
+Test migrations on a copy of production data before deploying
+Never edit existing migrations that have been run in production
+Keep your entities and database in sync using migrations

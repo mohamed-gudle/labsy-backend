@@ -6,6 +6,7 @@ We are using postgreSQL as the database, and TypeORM for ORM functionality.
 we are using firebase for authentication. 
 google cloud storage is used for file uploads.
 we are using yarn as the package manager.
+The terminal's default directory is the root of the project, and all commands should be run from there, no need to again go the root directory.
 
 
 
