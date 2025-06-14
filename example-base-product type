@@ -1,0 +1,206 @@
+/**
+ * Base product TypeScript interfaces and types
+ * Centralized type definitions for base product catalog and API responses
+ */
+
+/**
+ * Printable area interface for base products
+ * Represents a print location on a product, following industry standards
+ * Coordinates and dimensions are in millimeters (mm)
+ * DPI (dots per inch) is used for print quality
+ * mockup_url should be a WebP image for performance
+ */
+export interface PrintableArea {
+    /** Name of the print area (e.g., "Front", "Back", "Left Sleeve") */
+    name?: string;
+    /** X coordinate (mm) from the top-left of the mockup */
+    x: number;
+    /** Y coordinate (mm) from the top-left of the mockup */
+    y: number;
+    /** Width of the printable area (mm) */
+    width: number;
+    /** Height of the printable area (mm) */
+    height: number;
+    /** WebP mockup image URL for this print area */
+    mockup_url: string;
+    /** DPI for print quality (typical: 150-300) */
+    dpi?: number;
+}
+
+/**
+ * Product dimensions interface
+ * Physical dimensions of a product
+ */
+export interface ProductDimensions {
+    /** Length in centimeters */
+    length_cm?: number;
+    /** Width in centimeters */
+    width_cm?: number;
+    /** Height in centimeters */
+    height_cm?: number;
+}
+
+/**
+ * Product metadata interface
+ * Additional product information and specifications
+ */
+export interface ProductMetadata {
+    /** Material composition */
+    material?: string;
+    /** Care instructions */
+    care_instructions?: string;
+    /** Weight in grams */
+    weight_grams?: number;
+    /** Product dimensions */
+    dimensions?: ProductDimensions;
+}
+
+/**
+ * Base item interface
+ * Represents a product available for customization
+ * This is the main data structure for products in the catalog
+ */
+export interface BaseItem {
+    /** Unique product identifier */
+    id: string;
+    /** Product name/title */
+    title: string;
+    /** Product description */
+    description?: string;
+    /** Brand name */
+    brand: string;
+    /** Product type/category */
+    type?: string;
+    /** Product category (alternative to type) */
+    category?: string;
+    /** Material composition */
+    material?: string;
+    /** Base cost in currency units */
+    base_cost: number;
+    /** Currency code (default: USD) */
+
+    main_image?: string;
+    /** Available color codes (hex format) */
+    colors: string[];
+    /** Available sizes with stock quantities */
+    available_sizes: Record<string, number> | string[];
+    /** Print areas configuration */
+    print_areas: PrintableArea[];
+    /** Additional metadata */
+}
+
+/**
+ * Base products API response interface
+ * Standard response format for product list requests
+ */
+export interface BaseProductsResponse {
+    /** Array of base product items */
+    items: BaseItem[];
+    /** Total number of products */
+    total: number;
+    /** Current page number (if paginated) */
+    page?: number;
+    /** Number of items per page (if paginated) */
+    limit?: number;
+}
+
+/**
+ * Product filter options interface
+ * Available filters for searching and filtering products
+ */
+export interface ProductFilters {
+    /** Filter by product category */
+    category?: string;
+    /** Filter by brand */
+    brand?: string;
+    /** Filter by available color */
+    color?: string;
+    /** Filter by available size */
+    size?: string;
+    /** Minimum price filter */
+    minPrice?: number;
+    /** Maximum price filter */
+    maxPrice?: number;
+    /** Filter by country of origin */
+    country?: string;
+    /** Filter by material */
+    material?: string;
+    /** Search query string */
+    search?: string;
+}
+
+/**
+ * Product search parameters interface
+ * Extended search options with sorting and pagination
+ */
+export interface ProductSearchParams extends ProductFilters {
+    /** Sort field */
+    sortBy?: 'title' | 'price' | 'created_at' | 'updated_at';
+    /** Sort direction */
+    sortOrder?: 'asc' | 'desc';
+    /** Page number for pagination */
+    page?: number;
+    /** Number of items per page */
+    limit?: number;
+}
+
+/**
+ * Product catalog state interface
+ * Manages the state of product catalog browsing
+ */
+export interface ProductCatalogState {
+    /** Array of loaded products */
+    products: BaseItem[];
+    /** Currently applied filters */
+    filters: ProductFilters;
+    /** Loading state */
+    isLoading: boolean;
+    /** Error message if any */
+    error: string | null;
+    /** Total number of products */
+    total: number;
+    /** Current page */
+    currentPage: number;
+    /** Items per page */
+    itemsPerPage: number;
+    /** Selected product for detailed view */
+    selectedProduct: BaseItem | null;
+}
+
+/**
+ * Product creation request interface
+ * Data structure for creating new base products
+ */
+export interface CreateBaseProductRequest {
+    /** Product title */
+    title: string;
+    /** Product description */
+    description?: string;
+    /** Brand name */
+    brand: string;
+    /** Product category */
+    category: string;
+    /** Base cost */
+    base_cost: number;
+    /** Available colors */
+    colors: string[];
+    /** Available sizes */
+    available_sizes: Record<string, number> | string[];
+    /** Country of origin */
+    country?: string;
+    /** Print areas configuration */
+    print_areas: PrintableArea[];
+    /** Additional metadata */
+    metadata?: ProductMetadata;
+    /** Product tags */
+    tags?: string[];
+}
+
+/**
+ * Product update request interface
+ * Data structure for updating existing base products
+ */
+export interface UpdateBaseProductRequest extends Partial<CreateBaseProductRequest> {
+    /** Product ID (required for updates) */
+    id: string;
+}
