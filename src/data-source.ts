@@ -4,6 +4,8 @@ import { Admin } from './users/entities/admin.entity';
 import { Creator } from './users/entities/creator.entity';
 import { Customer } from './users/entities/customer.entity';
 import { Factory } from './users/entities/factory.entity';
+import { BaseProduct } from './catalog/entities/base-product.entity';
+import { PrintableArea } from './catalog/entities/printable-area.entity';
 // Add other entities as needed
 
 export const AppDataSource = new DataSource({
@@ -13,7 +15,15 @@ export const AppDataSource = new DataSource({
   username: process.env.DATABASE_USERNAME ?? 'admin',
   password: process.env.DATABASE_PASSWORD ?? 'secret',
   database: process.env.DATABASE_DATABASE ?? 'labsydb',
-  entities: [User, Admin, Creator, Customer, Factory],
+  entities: [
+    User,
+    Admin,
+    Creator,
+    Customer,
+    Factory,
+    BaseProduct,
+    PrintableArea,
+  ],
   migrations: [__dirname + '/migrations/*.{ts,js}'],
   synchronize: false, // Always false in production
 });

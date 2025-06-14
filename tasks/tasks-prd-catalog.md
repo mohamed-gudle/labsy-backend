@@ -29,17 +29,15 @@
 
 ## Tasks
 
-- [ ] 1.0 Create Database Schema and Entities
+- [x] 1.0 Create Database Schema and Entities
   - [x] 1.1 Design and create BaseProduct entity with all required fields from BaseItem interface
-  - [x] 1.2 Create PrintableArea entity with coordinates, dimensions, and mockup URL
-  - [x] 1.3 Set up proper entity relationships and constraints
-  - [ ] 1.4 Generate and run database migration for catalog schema
-  - [ ] 1.5 Add database indexes for performance optimization (category, brand, price, search fields)
+  - [x] 1.2 Create PrintableArea entity with coordinates, dimensions, and mockup URL  - [x] 1.3 Set up proper entity relationships and constraints  - [x] 1.4 Generate and run database migration for catalog schema
+  - [x] 1.5 Add database indexes for performance optimization (category, brand, price, search fields)
 
 - [ ] 2.0 Develop Core Catalog Module with CRUD Operations
-  - [ ] 2.1 Generate catalog module using NestJS CLI (`nest g resource catalog`)
-  - [ ] 2.2 Create comprehensive DTOs for create, update, and response operations
-  - [ ] 2.3 Implement catalog service with basic CRUD operations (create, read, update, delete)
+  - [x] 2.1 Generate catalog module using NestJS CLI (`nest g resource catalog`)
+  - [x] 2.2 Create comprehensive DTOs for create, update, and response operations
+  - [x] 2.3 Implement catalog service with basic CRUD operations (create, read, update, delete)
   - [ ] 2.4 Create catalog controller with RESTful endpoints for admin operations
   - [ ] 2.5 Add proper error handling and validation for all operations
   - [ ] 2.6 Implement TypeORM repository integration for database operations

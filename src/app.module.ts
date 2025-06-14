@@ -6,8 +6,10 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { User, Customer, Creator, Factory, Admin } from './users/entities';
+import { BaseProduct, PrintableArea } from './catalog/entities';
 import { UploadsModule } from './uploads/uploads.module';
 import { AdminModule } from './admin/admin.module';
+import { CatalogModule } from './catalog/catalog.module';
 
 @Module({
   imports: [
@@ -20,7 +22,15 @@ import { AdminModule } from './admin/admin.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [User, Customer, Creator, Factory, Admin],
+        entities: [
+          User,
+          Customer,
+          Creator,
+          Factory,
+          Admin,
+          BaseProduct,
+          PrintableArea,
+        ],
         synchronize: configService.get<string>('NODE_ENV') === 'development',
         logging: ['error', 'warn', 'log'],
         ssl:
@@ -34,6 +44,7 @@ import { AdminModule } from './admin/admin.module';
     UsersModule,
     UploadsModule,
     AdminModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

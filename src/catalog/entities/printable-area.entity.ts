@@ -12,7 +12,7 @@ import { BaseProduct } from './base-product.entity';
 
 @Entity('printable_areas')
 @Check('x >= 0')
-@Check('y >= 0') 
+@Check('y >= 0')
 @Check('width > 0')
 @Check('height > 0')
 @Check('dpi > 0')

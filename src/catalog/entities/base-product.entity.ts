@@ -18,7 +18,7 @@ import { PrintableArea } from './printable-area.entity';
 @Index(['brand'])
 @Index(['base_cost'])
 @Index(['country'])
-@Index(['created_at'])
+@Index(['createdAt'])
 @Check('base_cost > 0')
 @Check('LENGTH(title) > 0')
 @Unique(['title', 'brand']) // Ensure unique product titles within the same brand
@@ -27,7 +27,6 @@ export class BaseProduct {
   id: string;
 
   @Column({ length: 255, nullable: false })
-  @Index() // For search functionality
   title: string;
 
   @Column({ type: 'text', nullable: true })
