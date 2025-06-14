@@ -21,7 +21,9 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "yarn typeorm migration:generate src/migrations/YourMigrationName -d src/data-source.ts",
     "migration:run": "yarn typeorm migration:run -d src/data-source.ts",
-    "migration:revert": "yarn typeorm migration:revert -d src/data-source.ts"
+    "migration:revert": "yarn typeorm migration:revert -d src/data-source.ts",
+    "seed:super-admin": "npx ts-node src/seeds/create-super-admin.seed.ts",
+    "seed:super-admin:interactive": "npx ts-node src/seeds/create-super-admin-interactive.seed.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",

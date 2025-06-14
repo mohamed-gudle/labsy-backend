@@ -30,14 +30,6 @@ export enum AdminPermission {
 
 export class CreateAdminDto {
   @ApiProperty({
-    description: 'Firebase ID token for authentication',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  @IsNotEmpty()
-  @IsString()
-  token: string;
-
-  @ApiProperty({
     description: 'Admin name',
     example: 'Ahmed Al-Rashid',
   })

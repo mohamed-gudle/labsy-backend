@@ -1,7 +1,8 @@
 import { Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
+import { UserRole } from '../enums';
 
-@ChildEntity()
+@ChildEntity(UserRole.FACTORY)
 export class Factory extends User {
   @Column({ name: 'company_name' })
   companyName: string;

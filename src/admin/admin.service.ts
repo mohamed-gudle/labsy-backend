@@ -1,6 +1,5 @@
 import {
   Injectable,
-  BadRequestException,
   ConflictException,
   NotFoundException,
   ForbiddenException,
@@ -38,61 +37,50 @@ export class AdminService {
   ): Promise<Factory> {
     this.validateAdminPermissions(adminUser);
 
-    const { token, ...factoryData } = createFactoryDto;
-
     try {
-      // Verify Firebase token and get user info
-      const firebaseUser = await this.authService.verifyToken(token);
-
-      // Check if user already exists
+      // Check if user already exists by email
       const existingUser = await this.userRepository.findOne({
-        where: { firebaseUid: firebaseUser.uid },
+        where: { email: createFactoryDto.email },
       });
 
       if (existingUser) {
-        throw new ConflictException('User already registered');
+        throw new ConflictException('User with this email already exists');
       }
 
-      // Check if email matches
-      if (firebaseUser.email !== factoryData.email) {
-        throw new BadRequestException('Email does not match Firebase token');
-      }
-
-      // Create new factory
+      // Create new factory account (invitation-based)
       const factory = new Factory();
-      factory.firebaseUid = firebaseUser.uid;
-      factory.email = firebaseUser.email;
-      factory.name = factoryData.name;
+      factory.firebaseUid = ''; // Will be set when user completes registration
+      factory.email = createFactoryDto.email;
+      factory.name = createFactoryDto.name;
       factory.role = UserRole.FACTORY;
-      factory.status = UserStatus.ACTIVE;
-      factory.emailVerified = firebaseUser.emailVerified;
-      factory.profilePictureUrl = firebaseUser.picture ?? undefined;
+      factory.status = UserStatus.PENDING; // Account is pending until user completes registration
+      factory.emailVerified = false;
 
       // Set factory-specific fields
-      factory.companyName = factoryData.businessName;
-      factory.phone = factoryData.phone;
-      factory.companyDescription = factoryData.businessDescription;
-      factory.contactPerson = factoryData.name;
-      factory.businessLicense = factoryData.businessRegistrationNumber ?? '';
-      factory.taxId = factoryData.taxId ?? '';
+      factory.companyName = createFactoryDto.businessName;
+      factory.phone = createFactoryDto.phone;
+      factory.companyDescription = createFactoryDto.businessDescription;
+      factory.contactPerson = createFactoryDto.name;
+      factory.businessLicense = createFactoryDto.businessRegistrationNumber ?? '';
+      factory.taxId = createFactoryDto.taxId ?? '';
 
       // Map location data to match entity structure
       factory.location = {
         addressLine1:
-          factoryData.location.fullAddress ??
-          `${factoryData.location.city}, ${factoryData.location.region}`,
-        city: factoryData.location.city,
-        state: factoryData.location.region,
-        postalCode: factoryData.location.postalCode ?? '',
-        country: factoryData.location.country,
+          createFactoryDto.location.fullAddress ??
+          `${createFactoryDto.location.city}, ${createFactoryDto.location.region}`,
+        city: createFactoryDto.location.city,
+        state: createFactoryDto.location.region,
+        postalCode: createFactoryDto.location.postalCode ?? '',
+        country: createFactoryDto.location.country,
       };
 
       // Map capabilities if provided
-      if (factoryData.capabilities) {
+      if (createFactoryDto.capabilities) {
         factory.capabilities = {
-          printingMethods: factoryData.capabilities.printMethods ?? [],
-          materials: factoryData.capabilities.materialTypes ?? [],
-          productTypes: factoryData.capabilities.productCategories ?? [],
+          printingMethods: createFactoryDto.capabilities.printMethods ?? [],
+          materials: createFactoryDto.capabilities.materialTypes ?? [],
+          productTypes: createFactoryDto.capabilities.productCategories ?? [],
           colors: [],
           finishingOptions: [],
         };
@@ -109,7 +97,7 @@ export class AdminService {
       const savedFactory = await this.userRepository.save(factory);
 
       this.logger.log(
-        `Factory created by admin ${adminUser.id}: ${savedFactory.id} (${savedFactory.email})`,
+        `Factory account created by admin ${adminUser.id}: ${savedFactory.id} (${savedFactory.email}) - Status: PENDING`,
       );
 
       return savedFactory as Factory;
@@ -128,52 +116,41 @@ export class AdminService {
   ): Promise<Admin> {
     this.validateSuperAdminPermissions(superAdminUser);
 
-    const { token, ...adminData } = createAdminDto;
-
     try {
-      // Verify Firebase token and get user info
-      const firebaseUser = await this.authService.verifyToken(token);
-
-      // Check if user already exists
+      // Check if user already exists by email
       const existingUser = await this.userRepository.findOne({
-        where: { firebaseUid: firebaseUser.uid },
+        where: { email: createAdminDto.email },
       });
 
       if (existingUser) {
-        throw new ConflictException('User already registered');
+        throw new ConflictException('User with this email already exists');
       }
 
-      // Check if email matches
-      if (firebaseUser.email !== adminData.email) {
-        throw new BadRequestException('Email does not match Firebase token');
-      }
-
-      // Create new admin
+      // Create new admin account (invitation-based)
       const admin = new Admin();
-      admin.firebaseUid = firebaseUser.uid;
-      admin.email = firebaseUser.email;
-      admin.name = adminData.name;
+      admin.firebaseUid = ''; // Will be set when user completes registration
+      admin.email = createAdminDto.email;
+      admin.name = createAdminDto.name;
       admin.role = UserRole.ADMIN;
-      admin.status = UserStatus.ACTIVE;
-      admin.emailVerified = firebaseUser.emailVerified;
-      admin.profilePictureUrl = firebaseUser.picture ?? undefined;
+      admin.status = UserStatus.PENDING; // Account is pending until user completes registration
+      admin.emailVerified = false;
 
       // Set admin-specific fields
-      admin.phone = adminData.phone;
-      admin.adminLevel = this.mapAdminRole(adminData.adminRole);
-      admin.permissions = adminData.permissions
-        ? adminData.permissions.map((p) => p.toString())
-        : this.getDefaultPermissions(adminData.adminRole).map((p) =>
+      admin.phone = createAdminDto.phone;
+      admin.adminLevel = this.mapAdminRole(createAdminDto.adminRole);
+      admin.permissions = createAdminDto.permissions
+        ? createAdminDto.permissions.map((p) => p.toString())
+        : this.getDefaultPermissions(createAdminDto.adminRole).map((p) =>
             p.toString(),
           );
-      admin.department = adminData.department;
-      admin.position = adminData.jobTitle;
-      admin.employeeId = adminData.employeeId ?? this.generateEmployeeId();
+      admin.department = createAdminDto.department;
+      admin.position = createAdminDto.jobTitle;
+      admin.employeeId = createAdminDto.employeeId ?? this.generateEmployeeId();
 
       const savedAdmin = await this.userRepository.save(admin);
 
       this.logger.log(
-        `Admin created by super admin ${superAdminUser.id}: ${savedAdmin.id} (${savedAdmin.email})`,
+        `Admin account created by super admin ${superAdminUser.id}: ${savedAdmin.id} (${savedAdmin.email}) - Status: PENDING`,
       );
 
       return savedAdmin as Admin;

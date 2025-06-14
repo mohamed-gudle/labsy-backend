@@ -1,7 +1,8 @@
 import { Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
+import { UserRole } from '../enums';
 
-@ChildEntity()
+@ChildEntity(UserRole.ADMIN)
 export class Admin extends User {
   @Column({ name: 'employee_id', unique: true })
   employeeId: string;

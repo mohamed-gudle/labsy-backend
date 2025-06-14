@@ -47,7 +47,8 @@ export class FirebaseAuthGuard implements CanActivate {
       const user = await this.authService.findUserByFirebaseUid(
         decodedToken.uid,
       );
-
+      console.log('Decoded Token:', decodedToken);
+      console.log('User from DB:', user);
       if (!user) {
         throw new UnauthorizedException('User not found in database');
       }
@@ -63,6 +64,7 @@ export class FirebaseAuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
+      console.log('Error during token validation:', error);
       if (error instanceof UnauthorizedException) {
         throw error;
       }

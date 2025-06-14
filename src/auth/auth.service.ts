@@ -2,6 +2,7 @@
 import {
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -229,5 +230,57 @@ export class AuthService implements OnModuleInit {
 
   async findUserByFirebaseUid(firebaseUid: string): Promise<User | null> {
     return this.getUserByFirebaseUid(firebaseUid);
+  }
+
+  /**
+   * Complete pending user registration by linking Firebase account
+   */
+  async completePendingRegistration(
+    token: string,
+    email: string,
+  ): Promise<User> {
+    try {
+      // Verify the Firebase token
+      const firebaseUser = await this.verifyToken(token);
+
+      // Check if email matches the token
+      if (firebaseUser.email !== email) {
+        throw new UnauthorizedException('Email does not match Firebase token');
+      }
+
+      // Find pending user account by email
+      const pendingUser = await this.userRepository.findOne({
+        where: {
+          email: email,
+          status: UserStatus.PENDING,
+          firebaseUid: '', // Should be empty for pending invitations
+        },
+      });
+
+      if (!pendingUser) {
+        throw new NotFoundException(
+          'No pending invitation found for this email',
+        );
+      }
+
+      // Link Firebase account to pending user
+      pendingUser.firebaseUid = firebaseUser.uid;
+      pendingUser.status = UserStatus.ACTIVE;
+      pendingUser.emailVerified = firebaseUser.emailVerified;
+      pendingUser.profilePictureUrl =
+        firebaseUser.picture || pendingUser.profilePictureUrl;
+      pendingUser.lastLoginAt = new Date();
+
+      const completedUser = await this.userRepository.save(pendingUser);
+
+      this.logger.log(
+        `Pending registration completed: ${completedUser.id} (${completedUser.email})`,
+      );
+
+      return completedUser;
+    } catch (error) {
+      this.logger.error('Failed to complete pending registration', error);
+      throw error;
+    }
   }
 }

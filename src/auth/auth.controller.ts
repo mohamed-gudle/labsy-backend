@@ -6,7 +6,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { VerifyTokenDto, AuthResponseDto } from './dto';
+import {
+  VerifyTokenDto,
+  AuthResponseDto,
+  CompletePendingRegistrationDto,
+} from './dto';
 import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -151,5 +155,51 @@ export class AuthController {
     @Body() createCreatorDto: CreateCreatorDto,
   ): Promise<CreatorResponseDto> {
     return this.usersService.registerCreator(createCreatorDto);
+  }
+
+  @Post('complete-registration')
+  @ApiOperation({
+    summary: 'Complete pending registration',
+    description:
+      'Complete account registration for users invited by admins (factories and admins)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Registration completed successfully',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data or email mismatch',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired Firebase token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No pending invitation found for this email',
+  })
+  async completePendingRegistration(
+    @Body() completePendingRegistrationDto: CompletePendingRegistrationDto,
+  ): Promise<AuthResponseDto> {
+    const user = await this.authService.completePendingRegistration(
+      completePendingRegistrationDto.token,
+      completePendingRegistrationDto.email,
+    );
+
+    return {
+      id: user.id,
+      firebaseUid: user.firebaseUid,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      status: user.status,
+      profilePictureUrl: user.profilePictureUrl,
+      emailVerified: user.emailVerified,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }

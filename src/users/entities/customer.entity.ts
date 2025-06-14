@@ -1,7 +1,8 @@
 import { Column, ChildEntity } from 'typeorm';
 import { User } from './user.entity';
+import { UserRole } from '../enums';
 
-@ChildEntity()
+@ChildEntity(UserRole.CUSTOMER)
 export class Customer extends User {
   @Column({ nullable: true })
   phone?: string;

@@ -102,14 +102,6 @@ class FactoryLocationDto {
 
 export class CreateFactoryDto {
   @ApiProperty({
-    description: 'Firebase ID token for authentication',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  @IsNotEmpty()
-  @IsString()
-  token: string;
-
-  @ApiProperty({
     description: 'Factory name',
     example: 'Riyadh Print Factory',
   })

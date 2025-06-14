@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { UploadsController } from './uploads.controller';
@@ -30,7 +31,7 @@ describe('UploadsController', () => {
     lastLoginAt: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
-    deletedAt: null,
+    deletedAt: undefined,
   };
 
   beforeEach(async () => {
