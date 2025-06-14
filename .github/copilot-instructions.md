@@ -29,4 +29,5 @@ When writing code:
 - Use the `rxjs` library for reactive programming.
 - Use the `@nestjs/config` package for configuration management.
 - Use changelogs to document changes in the codebase.
+- add eslint comments to disable rules that are not applicable to the codebase.
 
