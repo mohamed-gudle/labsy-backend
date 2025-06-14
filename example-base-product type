@@ -44,16 +44,7 @@ export interface ProductDimensions {
  * Product metadata interface
  * Additional product information and specifications
  */
-export interface ProductMetadata {
-    /** Material composition */
-    material?: string;
-    /** Care instructions */
-    care_instructions?: string;
-    /** Weight in grams */
-    weight_grams?: number;
-    /** Product dimensions */
-    dimensions?: ProductDimensions;
-}
+
 
 /**
  * Base item interface
@@ -86,7 +77,7 @@ export interface BaseItem {
     available_sizes: Record<string, number> | string[];
     /** Print areas configuration */
     print_areas: PrintableArea[];
-    /** Additional metadata */
+
 }
 
 /**
@@ -190,8 +181,7 @@ export interface CreateBaseProductRequest {
     country?: string;
     /** Print areas configuration */
     print_areas: PrintableArea[];
-    /** Additional metadata */
-    metadata?: ProductMetadata;
+
     /** Product tags */
     tags?: string[];
 }

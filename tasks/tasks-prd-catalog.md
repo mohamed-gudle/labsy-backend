@@ -9,7 +9,6 @@
 - `src/catalog/catalog.service.spec.ts` - Unit tests for catalog service.
 - `src/catalog/entities/base-product.entity.ts` - TypeORM entity for base products.
 - `src/catalog/entities/printable-area.entity.ts` - TypeORM entity for printable areas.
-- `src/catalog/entities/product-metadata.entity.ts` - TypeORM entity for product metadata.
 - `src/catalog/entities/index.ts` - Barrel export for all catalog entities.
 - `src/catalog/dto/create-base-product.dto.ts` - DTO for creating base products.
 - `src/catalog/dto/update-base-product.dto.ts` - DTO for updating base products.
@@ -31,12 +30,11 @@
 ## Tasks
 
 - [ ] 1.0 Create Database Schema and Entities
-  - [ ] 1.1 Design and create BaseProduct entity with all required fields from BaseItem interface
-  - [ ] 1.2 Create PrintableArea entity with coordinates, dimensions, and mockup URL
-  - [ ] 1.3 Create ProductMetadata entity for additional product specifications
-  - [ ] 1.4 Set up proper entity relationships and constraints
-  - [ ] 1.5 Generate and run database migration for catalog schema
-  - [ ] 1.6 Add database indexes for performance optimization (category, brand, price, search fields)
+  - [x] 1.1 Design and create BaseProduct entity with all required fields from BaseItem interface
+  - [x] 1.2 Create PrintableArea entity with coordinates, dimensions, and mockup URL
+  - [x] 1.3 Set up proper entity relationships and constraints
+  - [ ] 1.4 Generate and run database migration for catalog schema
+  - [ ] 1.5 Add database indexes for performance optimization (category, brand, price, search fields)
 
 - [ ] 2.0 Develop Core Catalog Module with CRUD Operations
   - [ ] 2.1 Generate catalog module using NestJS CLI (`nest g resource catalog`)

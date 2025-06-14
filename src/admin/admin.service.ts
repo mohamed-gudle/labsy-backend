@@ -61,7 +61,8 @@ export class AdminService {
       factory.phone = createFactoryDto.phone;
       factory.companyDescription = createFactoryDto.businessDescription;
       factory.contactPerson = createFactoryDto.name;
-      factory.businessLicense = createFactoryDto.businessRegistrationNumber ?? '';
+      factory.businessLicense =
+        createFactoryDto.businessRegistrationNumber ?? '';
       factory.taxId = createFactoryDto.taxId ?? '';
 
       // Map location data to match entity structure
