@@ -22,7 +22,7 @@ import { AdminModule } from './admin/admin.module';
         url: configService.get<string>('DATABASE_URL'),
         entities: [User, Customer, Creator, Factory, Admin],
         synchronize: configService.get<string>('NODE_ENV') === 'development',
-        logging: configService.get<string>('NODE_ENV') === 'development',
+        logging: ['error', 'warn', 'log'],
         ssl:
           configService.get<string>('NODE_ENV') === 'production'
             ? { rejectUnauthorized: false }
@@ -38,4 +38,4 @@ import { AdminModule } from './admin/admin.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
