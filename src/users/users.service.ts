@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthService } from '../auth/auth.service';
+import { AuthService, FirebaseUser } from '../auth/auth.service';
 import { User, Customer, Creator } from './entities';
 import { UserRole } from './enums';
 import {
@@ -69,37 +69,31 @@ export class UsersService {
 
   async registerCreator(
     createCreatorDto: CreateCreatorDto,
-    user: User,
+    user: FirebaseUser,
   ): Promise<CreatorResponseDto> {
     const { ...creatorData } = createCreatorDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { firebaseUid: user.firebaseUid },
+      where: { firebaseUid: user.uid },
     });
 
     if (existingUser) {
       throw new ConflictException('User already registered');
     }
 
-    // Check if email matches
-    if (user.email !== creatorData.email) {
-      throw new BadRequestException('Email does not match authenticated user');
-    }
-
     // Create new creator
     const creator = new Creator();
-    creator.firebaseUid = user.firebaseUid;
+    creator.firebaseUid = user.uid;
     creator.email = user.email;
     creator.name = creatorData.name;
     creator.role = UserRole.CREATOR;
     creator.emailVerified = user.emailVerified;
-    creator.profilePictureUrl = user.profilePictureUrl;
+    creator.profilePictureUrl = user.picture;
     creator.phone = creatorData.phone;
     creator.businessName = creatorData.businessName;
     creator.businessDescription = creatorData.businessDescription;
     creator.socialMediaLinks = creatorData.socialMediaLinks;
-    creator.categories = creatorData.specialties;
 
     const savedCreator = await this.userRepository.save(creator);
 
@@ -192,9 +186,6 @@ export class UsersService {
         ...updateData.socialMediaLinks,
       };
     }
-    if (updateData.specialties !== undefined) {
-      creator.categories = updateData.specialties;
-    }
 
     // Update profile completion percentage
     creator.profileCompletionPercentage =
@@ -270,7 +261,7 @@ export class UsersService {
       businessDescription: creator.businessDescription,
       preferredLanguage: 'ar', // Default since it's not in Creator entity
       socialMediaLinks: creator.socialMediaLinks,
-      specialties: creator.categories ?? [],
+
       profileCompletion: this.calculateCreatorProfileCompletion(creator),
       isVerified: creator.verificationStatus === 'verified',
     };
@@ -300,7 +291,6 @@ export class UsersService {
       creator.businessDescription,
       creator.socialMediaLinks &&
         Object.keys(creator.socialMediaLinks).length > 0,
-      creator.categories && creator.categories.length > 0,
     ];
 
     const completedRequired = requiredFields.filter(

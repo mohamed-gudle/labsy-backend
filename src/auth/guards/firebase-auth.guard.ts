@@ -10,7 +10,7 @@ import { User } from '../../users/entities/user.entity';
 import { UserStatus } from '../../users/enums/user-status.enum';
 import { Observable } from 'rxjs';
 
-interface RequestWithUser extends Request {
+export interface RequestWithUser extends Request {
   user?: User;
   decodedToken?: any;
 }
@@ -47,13 +47,10 @@ export class FirebaseAuthGuard implements CanActivate {
       const user = await this.authService.findUserByFirebaseUid(
         decodedToken.uid,
       );
-      console.log('Decoded Token:', decodedToken);
-      console.log('User from DB:', user);
       if (!user) {
         throw new UnauthorizedException('User not found in database');
       }
 
-      // Check if user is active
       if (user.status !== UserStatus.ACTIVE) {
         throw new UnauthorizedException('User account is not active');
       }

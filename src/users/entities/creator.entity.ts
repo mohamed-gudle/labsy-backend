@@ -35,21 +35,13 @@ export class Creator extends User {
   })
   businessAddress?: BusinessAddress;
 
-  // Creator categories/specialties
-  @Column({
-    name: 'categories',
-    type: 'simple-array',
-    nullable: true,
-  })
-  categories?: string[];
-
-  // Bank account information for payments
-  @Column({
-    name: 'bank_account_info',
-    type: 'jsonb',
-    nullable: true,
-  })
-  bankAccountInfo?: BankAccountInfo;
+  // // Bank account information for payments
+  // @Column({
+  //   name: 'bank_account_info',
+  //   type: 'jsonb',
+  //   nullable: true,
+  // })
+  // bankAccountInfo?: BankAccountInfo;
 
   // Profile completion percentage
   @Column({
@@ -98,13 +90,13 @@ export interface BusinessAddress {
   country: string;
 }
 
-export interface BankAccountInfo {
-  bankName: string;
-  accountNumber: string;
-  iban?: string;
-  swiftCode?: string;
-  accountHolderName: string;
-}
+// export interface BankAccountInfo {
+//   bankName: string;
+//   accountNumber: string;
+//   iban?: string;
+//   swiftCode?: string;
+//   accountHolderName: string;
+// }
 
 export interface StoreSettings {
   storeName?: string;

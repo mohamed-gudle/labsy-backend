@@ -1,23 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
-  IsString,
-  MinLength,
-  MaxLength,
   IsPhoneNumber,
+  IsString,
   IsUrl,
-  ValidateNested,
-  IsArray,
   Matches,
+  MaxLength,
+  MinLength,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import {
-  IsValidLanguage,
-  IsValidSpecialty,
-  IsValidBusinessName,
-} from './validators';
+import { IsValidBusinessName, IsValidLanguage } from './validators';
 
 class SocialMediaLinksDto {
   @ApiPropertyOptional({
@@ -91,22 +86,13 @@ export class CreateCreatorDto {
   })
   name: string;
 
-  @ApiProperty({
-    description: 'Creator email address',
-    example: 'fatima@example.com',
-  })
-  @IsEmail({}, { message: 'Please provide a valid email address' })
-  @IsNotEmpty({ message: 'Email is required' })
-  email: string;
-
   @ApiPropertyOptional({
     description: 'Creator phone number with country code',
     example: '+966501234567',
   })
   @IsOptional()
-  @IsPhoneNumber('SA', {
-    message:
-      'Please provide a valid Saudi Arabian phone number with country code (+966)',
+  @IsPhoneNumber(undefined, {
+    message: 'Please provide a valid phone number with country code',
   })
   phone?: string;
 
@@ -162,17 +148,4 @@ export class CreateCreatorDto {
   })
   @Type(() => SocialMediaLinksDto)
   socialMediaLinks?: SocialMediaLinksDto;
-
-  @ApiPropertyOptional({
-    description: 'Product categories the creator specializes in',
-    example: ['apparel', 'home-decor', 'accessories'],
-    type: [String],
-  })
-  @IsOptional()
-  @IsArray({ message: 'Specialties must be an array' })
-  @IsValidSpecialty({
-    message:
-      'All specialties must be from the allowed list: apparel, home-decor, accessories, digital-art, stationery, bags, phone-cases, mugs, posters, canvas, jewelry, electronics, custom-gifts',
-  })
-  specialties?: string[];
 }

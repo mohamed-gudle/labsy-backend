@@ -1,26 +1,28 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
-  ApiTags,
+  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiTags,
 } from '@nestjs/swagger';
-import { AuthService } from './auth.service';
 import {
-  VerifyTokenDto,
-  AuthResponseDto,
-  CompletePendingRegistrationDto,
-} from './dto';
-import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
-import { CurrentUser } from './decorators/current-user.decorator';
+  CreateCreatorDto,
+  CreateCustomerDto,
+  CreatorResponseDto,
+  CustomerResponseDto,
+} from '../users/dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { AuthService, FirebaseUser } from './auth.service';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { FirebaseUserDec } from './decorators/firebase-user.decorator';
 import {
-  CreateCustomerDto,
-  CreateCreatorDto,
-  CustomerResponseDto,
-  CreatorResponseDto,
-} from '../users/dto';
+  AuthResponseDto,
+  CompletePendingRegistrationDto,
+  VerifyTokenDto,
+} from './dto';
+import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
+import { NoUserGuard } from './guards/no-user.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -129,7 +131,7 @@ export class AuthController {
   }
 
   @Post('register/creator')
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(NoUserGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Register a new creator',
@@ -155,7 +157,7 @@ export class AuthController {
   })
   async registerCreator(
     @Body() createCreatorDto: CreateCreatorDto,
-    @CurrentUser() user: User,
+    @FirebaseUserDec() user: FirebaseUser,
   ): Promise<CreatorResponseDto> {
     return this.usersService.registerCreator(createCreatorDto, user);
   }
