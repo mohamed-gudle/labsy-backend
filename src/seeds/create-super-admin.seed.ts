@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { NestFactory } from '@nestjs/core';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -67,6 +69,7 @@ async function createSuperAdmin() {
       firebaseUser = await admin.auth().getUserByEmail(superAdminData.email);
       console.log('✅ Firebase user found');
     } catch (error) {
+      console.error('❌ Firebase user not found:', error);
       console.log(
         '❌ Firebase user not found. Please create the user in Firebase Console first.',
       );
@@ -74,6 +77,7 @@ async function createSuperAdmin() {
       console.log(`   2. Add user with email: ${superAdminData.email}`);
       console.log(`   3. Make sure email is verified`);
       console.log(`   4. Run this script again`);
+
       process.exit(1);
     }
 

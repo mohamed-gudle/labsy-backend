@@ -9,6 +9,55 @@ export interface UploadResult {
   bucket: string;
 }
 
+export interface UploadOptions {
+  folder: string;
+  userId?: string;
+  customFileName?: string;
+  makePublic?: boolean;
+  cacheControl?: string;
+  validation?: FileValidationOptions;
+}
+
+export interface FileValidationOptions {
+  allowedMimeTypes?: string[];
+  maxSize?: number; // in bytes
+  minSize?: number; // in bytes
+}
+
+export enum FileType {
+  IMAGE = 'image',
+  DOCUMENT = 'document',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  ANY = 'any',
+}
+
+export const FILE_TYPE_CONFIGS: Record<FileType, FileValidationOptions> = {
+  [FileType.IMAGE]: {
+    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    maxSize: 10 * 1024 * 1024, // 10MB
+  },
+  [FileType.DOCUMENT]: {
+    allowedMimeTypes: [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ],
+    maxSize: 20 * 1024 * 1024, // 20MB
+  },
+  [FileType.VIDEO]: {
+    allowedMimeTypes: ['video/mp4', 'video/mpeg', 'video/quicktime'],
+    maxSize: 100 * 1024 * 1024, // 100MB
+  },
+  [FileType.AUDIO]: {
+    allowedMimeTypes: ['audio/mpeg', 'audio/wav', 'audio/ogg'],
+    maxSize: 50 * 1024 * 1024, // 50MB
+  },
+  [FileType.ANY]: {
+    maxSize: 100 * 1024 * 1024, // 100MB
+  },
+};
+
 @Injectable()
 export class UploadsService {
   private readonly logger = new Logger(UploadsService.name);
@@ -28,23 +77,34 @@ export class UploadsService {
   }
 
   /**
-   * Upload a profile picture to Google Cloud Storage
+   * Generic file upload method to Google Cloud Storage
    */
-  async uploadProfilePicture(
+  async uploadFile(
     file: Express.Multer.File,
-    userId: string,
+    options: UploadOptions,
   ): Promise<UploadResult> {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
 
     try {
-      // Validate file type
-      this.validateImageFile(file);
+      // Validate file if validation options are provided
+      if (options.validation) {
+        this.validateFile(file, options.validation);
+      }
 
-      // Generate unique filename
+      // Generate filename
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       const fileExtension = this.getFileExtension(file.originalname);
-      const fileName = `profiles/${userId}/${uuidv4()}.${fileExtension}`;
+      let fileName: string;
+
+      if (options.customFileName) {
+        fileName = `${options.folder}/${options.customFileName}.${fileExtension}`;
+      } else if (options.userId) {
+        fileName = `${options.folder}/${options.userId}/${uuidv4()}.${fileExtension}`;
+      } else {
+        fileName = `${options.folder}/${uuidv4()}.${fileExtension}`;
+      }
 
       // Get bucket reference
       const bucket = this.storage.bucket(this.bucketName);
@@ -54,7 +114,7 @@ export class UploadsService {
       const stream = fileObject.createWriteStream({
         metadata: {
           contentType: file.mimetype,
-          cacheControl: 'public, max-age=31536000', // 1 year
+          cacheControl: options.cacheControl ?? 'public, max-age=31536000', // 1 year default
         },
         resumable: false,
       });
@@ -68,8 +128,10 @@ export class UploadsService {
         stream.on('finish', () => {
           void (async () => {
             try {
-              // Make file publicly readable
-              await fileObject.makePublic();
+              // Make file publicly readable if specified (default: true)
+              if (options.makePublic !== false) {
+                await fileObject.makePublic();
+              }
 
               const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
 
@@ -88,12 +150,71 @@ export class UploadsService {
           })();
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         stream.end(file.buffer);
       });
     } catch (error) {
       this.logger.error('Upload service error', error);
       throw error;
     }
+  }
+
+  /**
+   * Upload a profile picture to Google Cloud Storage
+   * @deprecated Use uploadFile with FileType.IMAGE validation instead
+   */
+  async uploadProfilePicture(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<UploadResult> {
+    return this.uploadFile(file, {
+      folder: 'profiles',
+      userId,
+      validation: FILE_TYPE_CONFIGS[FileType.IMAGE],
+    });
+  }
+
+  /**
+   * Convenience methods for different file types
+   */
+  async uploadImage(
+    file: Express.Multer.File,
+    options: Omit<UploadOptions, 'validation'>,
+  ): Promise<UploadResult> {
+    return this.uploadFile(file, {
+      ...options,
+      validation: FILE_TYPE_CONFIGS[FileType.IMAGE],
+    });
+  }
+
+  async uploadDocument(
+    file: Express.Multer.File,
+    options: Omit<UploadOptions, 'validation'>,
+  ): Promise<UploadResult> {
+    return this.uploadFile(file, {
+      ...options,
+      validation: FILE_TYPE_CONFIGS[FileType.DOCUMENT],
+    });
+  }
+
+  async uploadVideo(
+    file: Express.Multer.File,
+    options: Omit<UploadOptions, 'validation'>,
+  ): Promise<UploadResult> {
+    return this.uploadFile(file, {
+      ...options,
+      validation: FILE_TYPE_CONFIGS[FileType.VIDEO],
+    });
+  }
+
+  async uploadAudio(
+    file: Express.Multer.File,
+    options: Omit<UploadOptions, 'validation'>,
+  ): Promise<UploadResult> {
+    return this.uploadFile(file, {
+      ...options,
+      validation: FILE_TYPE_CONFIGS[FileType.AUDIO],
+    });
   }
 
   /**
@@ -140,32 +261,46 @@ export class UploadsService {
   }
 
   /**
-   * Validate image file type and size
+   * Generic file validation method
    */
-  private validateImageFile(file: Express.Multer.File): void {
+  private validateFile(
+    file: Express.Multer.File,
+    validation: FileValidationOptions,
+  ): void {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
 
-    const allowedMimeTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/webp',
-    ];
+    // Validate MIME type
+    if (validation.allowedMimeTypes && validation.allowedMimeTypes.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      if (!validation.allowedMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          `Invalid file type. Allowed types: ${validation.allowedMimeTypes.join(', ')}`,
+        );
+      }
+    }
 
-    if (!allowedMimeTypes.includes(file.mimetype)) {
+    // Validate file size
+    if (validation.maxSize && file.size > validation.maxSize) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
+        `File size too large. Maximum size: ${validation.maxSize / 1024 / 1024}MB`,
       );
     }
 
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
+    if (validation.minSize && file.size < validation.minSize) {
       throw new BadRequestException(
-        `File size too large. Maximum size: ${maxSize / 1024 / 1024}MB`,
+        `File size too small. Minimum size: ${validation.minSize / 1024 / 1024}MB`,
       );
     }
+  }
+
+  /**
+   * Validate image file type and size
+   * @deprecated Use validateFile with FileValidationOptions instead
+   */
+  private validateImageFile(file: Express.Multer.File): void {
+    this.validateFile(file, FILE_TYPE_CONFIGS[FileType.IMAGE]);
   }
 
   /**

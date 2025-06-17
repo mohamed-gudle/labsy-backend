@@ -3,7 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CatalogController } from './catalog.controller';
 import { CatalogService } from './catalog.service';
 import { BaseProduct } from './entities';
-import { CreateBaseProductDto, UpdateBaseProductDto, ProductSearchParamsDto } from './dto';
+import {
+  CreateBaseProductDto,
+  UpdateBaseProductDto,
+  ProductSearchParamsDto,
+} from './dto';
 
 describe('CatalogController', () => {
   let controller: CatalogController;
