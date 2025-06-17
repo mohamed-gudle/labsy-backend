@@ -129,6 +129,8 @@ export class AuthController {
   }
 
   @Post('register/creator')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Register a new creator',
     description:
@@ -153,8 +155,9 @@ export class AuthController {
   })
   async registerCreator(
     @Body() createCreatorDto: CreateCreatorDto,
+    @CurrentUser() user: User,
   ): Promise<CreatorResponseDto> {
-    return this.usersService.registerCreator(createCreatorDto);
+    return this.usersService.registerCreator(createCreatorDto, user);
   }
 
   @Post('complete-registration')

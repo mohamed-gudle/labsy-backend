@@ -78,14 +78,6 @@ class SocialMediaLinksDto {
 
 export class CreateCreatorDto {
   @ApiProperty({
-    description: 'Firebase ID token for authentication',
-    example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjE2NzAyN...',
-  })
-  @IsNotEmpty({ message: 'Firebase token is required' })
-  @IsString({ message: 'Token must be a string' })
-  token: string;
-
-  @ApiProperty({
     description: 'Creator full name',
     example: 'Fatima Al-Zahra',
   })

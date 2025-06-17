@@ -5,3 +5,11 @@ Use descriptive migration names that explain what they do
 Test migrations on a copy of production data before deploying
 Never edit existing migrations that have been run in production
 Keep your entities and database in sync using migrations
+
+
+remove business license and taxid, 
+bank accountinfo later
+
+profileCompletionPercentage ?? how do you even measure it 
+
+when logging in the frontend if error is user not found in the database -- take them to the onboarding journey

@@ -69,15 +69,13 @@ export class UsersService {
 
   async registerCreator(
     createCreatorDto: CreateCreatorDto,
+    user: User,
   ): Promise<CreatorResponseDto> {
-    const { token, ...creatorData } = createCreatorDto;
-
-    // Verify Firebase token and get user info
-    const firebaseUser = await this.authService.verifyToken(token);
+    const { ...creatorData } = createCreatorDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { firebaseUid: firebaseUser.uid },
+      where: { firebaseUid: user.firebaseUid },
     });
 
     if (existingUser) {
@@ -85,18 +83,18 @@ export class UsersService {
     }
 
     // Check if email matches
-    if (firebaseUser.email !== creatorData.email) {
-      throw new BadRequestException('Email does not match Firebase token');
+    if (user.email !== creatorData.email) {
+      throw new BadRequestException('Email does not match authenticated user');
     }
 
     // Create new creator
     const creator = new Creator();
-    creator.firebaseUid = firebaseUser.uid;
-    creator.email = firebaseUser.email;
+    creator.firebaseUid = user.firebaseUid;
+    creator.email = user.email;
     creator.name = creatorData.name;
     creator.role = UserRole.CREATOR;
-    creator.emailVerified = firebaseUser.emailVerified;
-    creator.profilePictureUrl = firebaseUser.picture;
+    creator.emailVerified = user.emailVerified;
+    creator.profilePictureUrl = user.profilePictureUrl;
     creator.phone = creatorData.phone;
     creator.businessName = creatorData.businessName;
     creator.businessDescription = creatorData.businessDescription;
